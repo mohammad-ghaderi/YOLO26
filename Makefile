@@ -18,6 +18,7 @@ CFLAGS := -O0 \
 # Source files
 SRC := main.c \
        tools.c \
+       padding.s\
        $(wildcard microkernels/*.s)
 
 TARGET := conv

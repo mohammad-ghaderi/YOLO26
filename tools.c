@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "tools.h"
 
 void writeArrayToFile(void *array, int size, const char *filename, const char *format, size_t elem_size)
@@ -27,4 +28,9 @@ void writeArrayToFile(void *array, int size, const char *filename, const char *f
     }
 
     fclose(f);
+}
+
+
+void fillArrayWithRandom(int8_t *arr, int size) {
+    for (int i = 0; i < size; i++) *(arr+i) = (rand()%100)-49;
 }
