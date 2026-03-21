@@ -9,16 +9,16 @@ else
 endif
 
 # Build flags
-CFLAGS := -O0 \
+CFLAGS := -O1 \
           -march=armv8-a+simd \
           -ftree-vectorize \
           -fopenmp \
           -g
 
 # Source files
-SRC := main.c \
-       tools.c \
-       padding.s\
+SRC := main.c  tools.c \
+       padding.s indirection.s indirection.c \
+       buffer.s\
        $(wildcard microkernels/*.s)
 
 TARGET := conv
