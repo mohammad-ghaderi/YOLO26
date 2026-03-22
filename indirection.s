@@ -2,62 +2,196 @@
 .type build_indirection, %function
 .extern zero_buffer
 
+// unused registers : x17..31
+
 build_indirection:
     // x0 = input
     // x1 = indirection
     // x2 = size
     // x3 = IC
 
-    adrp x5, zero_buffer
-    add  x5, x5, :lo12:zero_buffer
+    adrp x15, zero_buffer
+    add  x15, x15, :lo12:zero_buffer
 
-    mov x6, #0         // oy
-oy_loop:
-    mov x7, #0         // ox
-    subs x10, x6, #1    // x10 = oy - 1
-ox_loop:
-    mov x8, #0         // ky
-    subs x11, x7, #1    // x11 = ox - 1
-ky_loop:
-    mov x9, #0         // kx
-    add x12, x10, x8    // iy
-kx_loop:
-    add x13, x11, x9     // ix
+    sub x16, x2, #2     // x16 = size - 2
+    mul x10, x2, x3     // x10 = a layer size
+    add x11, x10, x10   // x11 = two layer size
+    add x12, x3, x3     // x12 = 2*IC
+    mul x13, x16, x3    // x13 = (size-2)*IC
 
-    cmp x12, #0
-    blt zero_padding
-    cmp x13, #0
-    blt zero_padding
-    cmp x12, x2
-    bge zero_padding
-    cmp x13, x2
-    bge zero_padding
+    // ################ top layer #####################
 
-    mul x14, x12, x2
-    add x14, x14, x13
-    mul x14, x14, x3    // x14 = offset -> (iy*W + ix)*IC
-    add x14, x0, x14
-    str x14, [x1], #8
+    // first one    (top left corner)
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x0, [x1], #8    // pos 5
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 6
+    str x15, [x1], #8   // zero
+    add x8, x0, x10
+    str x8, [x1], #8    // pos 8
+    add x8, x7, x10 
+    str x8, [x1], #8    // pos 9
 
-    b loop_inc
-zero_padding:
-    str x5, [x1], #8
 
-loop_inc:
-    add x9, x9, #1
-    cmp x9, #3
-    blt kx_loop
+    // middle of top layer
+    mov x6, x16
+.middle_top:
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x0, [x1], #8    // pos 4
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 5
+    add x8, x7, x3
+    str x8, [x1], #8    // pos 6
+    add x9, x0, x10
+    str x9, [x1], #8    // pos 7
+    add x9, x7, x10
+    str x9, [x1], #8    // pos 8
+    add x9, x8, x10
+    str x9, [x1], #8    // pos 9
 
-    add x8, x8, #1
-    cmp x8, #3
-    blt ky_loop
+    add x0, x0, x3      // move kernel
+    subs x6, x6, #1
+    bne .middle_top
 
-    add x7, x7, #1
-    cmp x7, x2
-    blt ox_loop
+    // last of top layer    (top right corner)
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x0, [x1], #8    // pos 4
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 5
+    str x15, [x1], #8   // zero
+    add x8, x0, x10
+    str x8, [x1], #8    // pos 7
+    add x8, x7, x10
+    str x8, [x1], #8    // pos 8
+    str x15, [x1], #8   // zero
 
-    add x6, x6, #1
-    cmp x6, x2
-    blt oy_loop
+    sub x0, x0, x13     // move kernel back to the start of the row
+    
+    // ################ middle layer #####################
+    mov x14, x16
+.middle_loop:    
+    // first one
+    str x15, [x1], #8   // zero
+    str x0, [x1], #8    // pos 2
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 3
+    str x15, [x1], #8   // zero
+    add x8, x0, x10
+    str x8, [x1], #8    // pos 5
+    add x8, x7, x10 
+    str x8, [x1], #8    // pos 6
+    str x15, [x1], #8   // zero
+    add x8, x0, x11
+    str x8, [x1], #8    // pos 8
+    add x8, x7, x11
+    str x8, [x1], #8    // pos 9
+
+
+    // middle of middle layer
+    mov x6, x16
+.middle_middle:
+    str x0, [x1], #8    // pos 1
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 2
+    add x8, x7, x3
+    str x8, [x1], #8    // pos 3
+    add x9, x0, x10
+    str x9, [x1], #8    // pos 4
+    add x9, x7, x10
+    str x9, [x1], #8    // pos 5
+    add x9, x8, x10
+    str x9, [x1], #8    // pos 6
+    add x9, x0, x11
+    str x9, [x1], #8    // pos 7
+    add x9, x7, x11
+    str x9, [x1], #8    // pos 8
+    add x9, x8, x11
+    str x9, [x1], #8    // pos 9
+
+    add x0, x0, x3      // move kernel
+    subs x6, x6, #1
+    bne .middle_middle
+
+    // last of middle layer
+    str x0, [x1], #8    // pos 1
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 2
+    str x15, [x1], #8   // zero
+    add x8, x0, x10
+    str x8, [x1], #8    // pos 4
+    add x8, x7, x10
+    str x8, [x1], #8    // pos 5
+    str x15, [x1], #8   // zero
+    add x8, x0, x11
+    str x8, [x1], #8    // pos 7
+    add x8, x7, x11
+    str x8, [x1], #8    // pos 8
+    str x15, [x1], #8   // zero
+
+    add x0, x0, x12     // move kernel, skip last column and go first of next row
+
+    subs x14, x14, #1
+    bne .middle_loop
+
+    // ################ bottom layer #####################
+    
+    // first one of bottom layer (bottom left corner)
+    str x15, [x1], #8   // zero
+    str x0, [x1], #8    // pos 2
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 3
+    str x15, [x1], #8   // zero
+    add x8, x0, x10
+    str x8, [x1], #8    // pos 5
+    add x8, x7, x10
+    str x8, [x1], #8    // pos 6
+    str x15, [x1], #8   // zero
+    add x8, x0, x11
+    str x8, [x1], #8    // pos 8
+    add x8, x7, x11
+    str x8, [x1], #8    // pos 9
+
+    // middle of bottom layer
+    mov x6, x16
+.middle_bottom:
+    str x0, [x1], #8    // pos 1
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 2
+    add x8, x7, x3
+    str x8, [x1], #8    // pos 3
+    add x9, x0, x10
+    str x9, [x1], #8    // pos 4
+    add x9, x7, x10
+    str x9, [x1], #8    // pos 5
+    add x9, x8, x10
+    str x9, [x1], #8    // pos 6
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+
+    add x0, x0, x3      // move kernel
+    subs x6, x6, #1
+    bne .middle_bottom
+
+    // last of bottom layer (bottom right corner)
+    str x0, [x1], #8    // pos 1
+    add x7, x0, x3
+    str x7, [x1], #8    // pos 2
+    str x15, [x1], #8   // zero
+    add x8, x0, x10
+    str x8, [x1], #8    // pos 4
+    add x8, x7, x10
+    str x8, [x1], #8    // pos 5
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
 
     ret
