@@ -153,10 +153,8 @@ build_indirection:
     add x8, x7, x10
     str x8, [x1], #8    // pos 6
     str x15, [x1], #8   // zero
-    add x8, x0, x11
-    str x8, [x1], #8    // pos 8
-    add x8, x7, x11
-    str x8, [x1], #8    // pos 9
+    str x15, [x1], #8   // zero
+    str x15, [x1], #8   // zero
 
     // middle of bottom layer
     mov x6, x16
