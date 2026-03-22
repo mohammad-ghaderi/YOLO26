@@ -6,7 +6,8 @@ REMOTE_DIR="/home/$USER/Desktop/YOLO26"
 
 echo "Syncing project to Raspberry Pi..."
 
-rsync -avz --delete \
+rsync -rvz --delete \
+    --no-times --omit-dir-times \
     --exclude ".git" \
     --exclude "out/" \
     --exclude "conv" \
