@@ -1,7 +1,9 @@
-.global conv_direct_3x3_int8_4x16_v5
-.type conv_direct_3x3_int8_4x16_v5, %function
+.global conv_direct_3x3_int8_4x16_v6
+.type conv_direct_3x3_int8_4x16_v6, %function
 
-conv_direct_3x3_int8_4x16_v5:
+// unused registers : x10..14, x18..31
+
+conv_direct_3x3_int8_4x16_v6:
 
     // x0 = input
     // x1 = weights

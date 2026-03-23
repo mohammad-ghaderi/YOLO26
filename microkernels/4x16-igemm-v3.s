@@ -2,6 +2,8 @@
 .type conv_igemm_3x3_int8_4x16_v3, %function
 // no prefetch
 
+// unused registers : x9..14, x17..31
+
 conv_igemm_3x3_int8_4x16_v3:
 
     // x0 = indirection
@@ -46,11 +48,6 @@ ic_loop:
     ld1         {v1.8b}, [x6], 8
     ld1         {v2.8b}, [x7], 8
     ld1         {v3.8b}, [x8], 8
-
-    // prfm        pldl1keep, [x5, 128]
-    // prfm        pldl1keep, [x6, 128]
-    // prfm        pldl1keep, [x7, 128]
-    // prfm        pldl1keep, [x8, 128]
     
     sxtl        v0.8h, v0.8b
     sxtl        v1.8h, v1.8b
@@ -228,14 +225,6 @@ ic_loop:
 
     subs x16, x16, #8
     bgt ic_loop
-
-    // prfm pstl1strm, [x2, #0]   
-    // add x9, x2, x3
-    // prfm pstl1strm, [x2, #32] 
-    // add x9, x9, x3
-    // prfm pstl1strm, [x2, #64]
-    // add x9, x9, x3
-    // prfm pstl1strm, [x2, #96]   
 
     adds x0, x0, #8
     subs x15, x15, #1

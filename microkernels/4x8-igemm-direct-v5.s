@@ -1,6 +1,8 @@
 .global conv_direct_3x3_int8_4x8_v5
 .type conv_direct_3x3_int8_4x8_v5, %function
 
+// unused registers : x10..14, x18..31
+
 conv_direct_3x3_int8_4x8_v5:
 
     // x0 = input

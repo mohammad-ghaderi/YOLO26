@@ -2,6 +2,8 @@
 .type conv_igemm_3x3_int8_4x16_v4, %function
 // with prefetching
 
+// unused registers : x10..x14, x17..x31
+
 conv_igemm_3x3_int8_4x16_v4:
 
     // x0 = indirection
@@ -228,14 +230,6 @@ ic_loop:
 
     subs x16, x16, #8
     bgt ic_loop
-
-    prfm pstl1strm, [x2, #0]   
-    add x9, x2, x3
-    prfm pstl1strm, [x2, #32] 
-    add x9, x9, x3
-    prfm pstl1strm, [x2, #64]
-    add x9, x9, x3
-    prfm pstl1strm, [x2, #96]   
 
     adds x0, x0, #8
     subs x15, x15, #1

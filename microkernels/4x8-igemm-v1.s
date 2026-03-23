@@ -2,6 +2,8 @@
 .type conv_igemm_3x3_int8_4x8_v1, %function
 // igemm no prefetch
 
+// unused registers : x9..14, x17..31
+
 conv_igemm_3x3_int8_4x8_v1:
 
     // x0 = indirection
