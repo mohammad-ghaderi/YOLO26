@@ -39,10 +39,6 @@ gemm8x8_v4:
     movi    v30.4s, #0
     movi    v31.4s, #0
 
-    // ld1     {v0.4s, v1.4s, v2.4s, v3.4s}, [x1]
-    // ld1     {v4.4s, v5.4s, v6.4s, v7.4s}, [x1]
-    // ld1         {v8.4s, v9.4s}, [x1]
-
     mov     x7,  x0             // pixel0
     add     x8,  x7,  x6        // pixel1 (+ (9*1)*8)
     add     x9,  x8,  x6        // pixel2 (+ (9*2)*8)
