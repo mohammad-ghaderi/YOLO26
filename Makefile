@@ -9,16 +9,17 @@ else
 endif
 
 # Build flags
-CFLAGS := -O1 \
-          -march=armv8-a+simd \
+CFLAGS := -O0 \
+          -march=armv8-a+simd+fp16 \
           -ftree-vectorize \
           -fopenmp \
           -g
 
+LDFLAGS := -lm
+
 # Source files
-SRC := main.c  tools.c \
-       padding.s indirection.s indirection.c \
-       buffer.s\
+SRC := main.c  tools/tools.c buffer.s  padding.s indirection.s \
+        conv.c buffer.s winograd.c activation_function.s loader.c \
        $(wildcard microkernels/*.s)
 
 TARGET := conv
@@ -26,7 +27,7 @@ TARGET := conv
 all: $(TARGET)
 
 $(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 run: $(TARGET)
 	$(RUN) ./$(TARGET)
