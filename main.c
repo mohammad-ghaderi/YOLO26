@@ -21,14 +21,19 @@ int stride = 2;
 
 void SiLU(float *inp);
 void SiLU_array(float *inp, int SIZE);
+void SiLU_array_bias(float *inp, float *bias, int SIZE, int OC);
 
-
+void here() {
+    return;
+}
 
 void gemm_ic3s2(float *inp, float *weights, float *output, int SIZE);
 
 int main() {
     int width, height, channels;
     unsigned char *img = stbi_load("test/img.jpg", &width, &height, &channels, 3);
+
+    for (int i = 0; i < SIZE*SIZE*IC; i++) input[IC*SIZE+i] = (float)img[i] / 255.0f;
     
     if (load_weights() != 0) {
         printf("Failed to load weights!\n");
@@ -36,14 +41,15 @@ int main() {
     }
 
     int OUT = (SIZE + 2 - 3)/stride + 1;
-    // writeArrayToFile(img, IC, "out/input.txt", 0);
-    // writeArrayToFile(weights, 9*IC*OC, "out/weights.txt", 0);
+    // writeArrayToFile(input+IC*SIZE, SIZE*SIZE*IC, "out/input.txt", 0);
+    // writeArrayToFile(params, 9*IC*OC, "out/weights.txt", 0);
     // writeArrayToFile(weights, 9*OC, "out/weights.txt", 0);  // for depth wise
     
     memset(output, 0, OUT*OUT*OC*4);
     // add_padding_backward(input, SIZE, IC);
     // winograd(input, weights, output, SIZE, IC, OC);
 
+    here();
 
     // conv3x3(input, weights, output, SIZE, IC, OC, version, thread, block_y, block_x, stride);
     // winograd_f23(input, weights, output, SIZE, IC, OC);
@@ -55,12 +61,15 @@ int main() {
     // depthwise_conv_c4r2(input, weights, output, OC, SIZE);
     // conv3x3(input, weights, output, SIZE, IC, OC, 7, 1, 4, 4, stride);
 
-    pack_weights_ic3(weights, pw);
+    // pack_weights_ic3(params, pw);
+    // writeArrayToFile(pw, IC*9*OC, "out/pw.txt", 0);
+    writeArrayToFile(params, IC*9*OC, "out/pw2.txt", 0);
+
 
     // clock_t start = clock();
 
-    gemm_ic3s2(input, pw, output, SIZE);
-    // SiLU_array(output, OUT*OUT*OC);
+    gemm_ic3s2(input, params, output, SIZE);
+    SiLU_array_bias(output, params + IC*OC*9, OUT*OUT*OC, OC);
     // for (int i = 0; i < OUT*OUT*OC; i+=4) SiLU(output+i);
 
 
@@ -68,7 +77,7 @@ int main() {
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
     // printf("%.6f #\n", time_spent);
 
-    // if (!notprint) writeArrayToFile(output, OUT*OUT*OC, "out/out.txt", 0);
+    writeArrayToFile(output, OUT*OUT*OC, "out/out.txt", 0);
 
 
 
