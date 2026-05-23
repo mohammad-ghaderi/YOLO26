@@ -14,10 +14,8 @@ gemm_ic3s2:
     // x2: output address
     // x3: SIZE
 
-    sub sp, sp, #80
+    sub sp, sp, #32
     stp q14,  q15,  [sp, #0]
-    stp q8,  q9,  [sp, #32]
-    str q10, [sp, #64]
 
     // output address:
     // x16, x2, x14, x15
@@ -49,9 +47,9 @@ gemm_ic3s2:
 
     // activation constants
     // v8, v9, v10
-    ldr     q8, exp_pack1          // v8 = {hi, lo, LOG2EF, 0.5}
-    ldr     q9, exp_pack2          // v9 = {c1, c2 , p4, p5}
-    ldr     q10, exp_pack3         // v10 = {p0, p1, p2, p3}
+    // ldr     q8, exp_pack1          // v8 = {hi, lo, LOG2EF, 0.5}
+    // ldr     q9, exp_pack2          // v9 = {c1, c2 , p4, p5}
+    // ldr     q10, exp_pack3         // v10 = {p0, p1, p2, p3}
 
     mov     x6, x3
     lsr     x6, x6, #1      // x6 = SIZE/2  -> oh
@@ -308,8 +306,6 @@ gemm_ic3s2:
     bgt .oh_loop
 
     ldp q14,  q15,  [sp, #0]
-    ldp q8,  q9,  [sp, #32]
-    ldr q10, [sp, #64]
-    add sp, sp, #80
+    add sp, sp, #32
 
     ret
