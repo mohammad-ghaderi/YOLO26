@@ -10,8 +10,11 @@ void writeArrayToFile(void *array, int size, const char *filename, int integer)
         printf("Error opening file\n");
         return;
     }
-
-    if (integer == 1) {
+    if (integer == 2) {
+        char *arr = (char *)array;
+        for (int i = 0; i < size; i++)
+            fprintf(f, "%d\n", (int)arr[i]);
+    } else if (integer == 1) {
         int *arr = (int *)array;
         for (int i = 0; i < size; i++)
             fprintf(f, "%d\n", (int)arr[i]);
