@@ -19,7 +19,8 @@ int stride = 2;
 
 void SiLU(float *inp);
 void SiLU_array(float *inp, int SIZE);
-void SiLU_array_bias(float *inp, float *bias, int SIZE, int OC);
+void SiLU_array_bias(float *inp, float *bias, int SIZE);
+void SiLU_array_bias_oc8(float *inp, float *bias, int SIZE);
 void SiLU_array_bias_full(float *inp, float *bias, int SIZE, int OC);
 
 
@@ -48,45 +49,44 @@ int main() {
     int OUT = (SIZE + 2 - 3)/stride + 1;
 
     gemm_ic3s2(arr1, weights, arr2, SIZE);
-    weights += IC*OC*9;
-    SiLU_array_bias(arr2, weights, OUT*OUT*OC, OC);
-    weights += OC;
+    SiLU_array_bias(arr2, weights+IC*OC*9, OUT*OUT*OC);
+    weights += IC*OC*9+OC;
 
     IC = OC; SIZE = OUT; OC = 32; OUT /= 2;
 
     conv3x3nr8(arr2, weights, arr1, SIZE, IC, OC, stride);
-    weights += IC*OC*9;
-    SiLU_array_bias_full(arr1, weights, OUT*OUT*OC, OC);
-    weights += OC;
+    SiLU_array_bias_full(arr1, weights+IC*OC*9, OUT*OUT*OC, OC);
+    weights += IC*OC*9+OC;
     
-    IC = OC; SIZE = OUT;
+    IC = OC; SIZE = OUT; stride = 1;
     pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE);
-    weights += IC*OC;
-    SiLU_array_bias_full(arr2, weights, OUT*OUT*OC, OC);
-    weights += OC;
+    SiLU_array_bias_full(arr2, weights+IC*OC, OUT*OUT*OC, OC);
+    weights += IC*OC+OC;
 
     IC = 16; OC = 8;
     int idx = 0;
 
-    for (int i = 0; i < (SIZE+2)*IC; i++) arr3[idx++] = 0;
-    for (int ih = 0; ih < SIZE; ih++) {
-        for (int ic = 0; ic < IC; ic++) arr3[idx++] = 0;
+    for (int ih = 0; ih < SIZE; ih++) {         // temporal for y[-1] after split (i'll merge it later)
         for (int iw = 0; iw < SIZE; iw++) {
             for (int ic = 0; ic < IC; ic++) {
                 arr3[idx++] = arr2[(ih*SIZE+iw)*IC*2+ic+IC];
             }
         }
-        for (int ic = 0; ic < IC; ic++) arr3[idx++] = 0;
     }
-    for (int i = 0; i < (SIZE+2)*IC; i++) arr3[idx++] = 0;
 
-    writeArrayToFile(weights, IC*OC*9, "out/weights.txt", 0);
+    weights += 48*64+64; // skip the conv1x1 cv2 weights and bias (IC=48 OC=64)
+    conv3x3nr8(arr3, weights, arr1, SIZE, IC, OC, stride);
 
-    winograd_f23(arr3, weights, arr1, SIZE, IC, OC);
-    weights += IC*OC;
-    SiLU_array_bias_full(arr1, weights, OUT*OUT*OC, OC);
+    SiLU_array_bias_oc8(arr1, weights+IC*OC*9, OUT*OUT*OC);
+    weights += IC*OC*9+OC;
     
-    writeArrayToFile(arr1, OUT*OUT*OC, "out/output.txt", 0);
+    IC = 8; OC = 16;
+    conv3x3nr8(arr1, weights, arr3, SIZE, IC, OC, stride);
+    SiLU_array_bias(arr3, weights+IC*OC*9, OUT*OUT*OC);
+    weights += IC*OC*9+OC;
+    
+    writeArrayToFile(arr3, OUT*OUT*OC, "out/output.txt", 0);
+    
     here();
     
 
