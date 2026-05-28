@@ -43,6 +43,9 @@ void transform_weight_f23(float* weight, int IC, int OC) {
         weight += IC*9;
     }
 
+    writeArrayToFile(U, OC*IC*16, "out/wtb.txt", 0);
+
+
     int idx = 0;
     for (int oc = 0; oc < OC; oc+=4) {
         for (int ic = 0; ic < IC; ic+=4) {
@@ -66,7 +69,7 @@ void transform_weight_f23(float* weight, int IC, int OC) {
 
 void winograd_f23(float *input, float *weights, float *output, int SIZE, int IC, int OC) {
 
-    transform_weight_f23(weights, IC, OC);
+    // transform_weight_f23(weights, IC, OC);
     
     for (int ih = 0; ih < SIZE; ih+=2) {
         for (int iw = 0; iw < SIZE; iw+=2) {

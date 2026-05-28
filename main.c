@@ -75,30 +75,22 @@ int main() {
     }
 
     weights += 48*64+64; // skip the conv1x1 cv2 weights and bias (IC=48 OC=64)
-    conv3x3nr8(arr3, weights, arr1, SIZE, IC, OC, stride);
 
-    SiLU_array_bias_oc8(arr1, weights+IC*OC*9, OUT*OUT*OC);
-    weights += IC*OC*9+OC;
-    
+    add_padding_backward(arr3, SIZE, IC);
+    winograd_f23(arr3, weights, arr1, SIZE, IC, OC);
+    SiLU_array_bias_oc8(arr1, weights+OC*IC*16, OUT*OUT*OC);
+    weights += IC*OC*16+OC;
+
     IC = 8; OC = 16;
-    conv3x3nr8(arr1, weights, arr3, SIZE, IC, OC, stride);
-    SiLU_array_bias(arr3, weights+IC*OC*9, OUT*OUT*OC);
-    weights += IC*OC*9+OC;
     
-    writeArrayToFile(arr3, OUT*OUT*OC, "out/output.txt", 0);
+    add_padding_backward(arr1, SIZE, IC);
+    winograd_f23(arr1, weights, arr3, SIZE, IC, OC);
+    SiLU_array_bias(arr3, weights+OC*IC*16, OUT*OUT*OC);
+
+    writeArrayToFile(arr3, OUT*OUT*OC, "out/wino.txt", 0);
     
     here();
     
-
-    // float bias[OC];
-    // add_padding_backward(arr2, SIZE, IC);
-    // winograd_f23(arr2, weights, arr1, SIZE, IC, OC);
-    
-    
-    // I should do the winograd weight transform and packing in the build time
-    
-
-
 
 
 
