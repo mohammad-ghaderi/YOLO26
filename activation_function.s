@@ -1,7 +1,7 @@
-.global SiLU, SiLU_array, SiLU_array_bias, SiLU_array_bias_oc8, SiLU_array_bias_full
+.global SiLU, SiLU_array, SiLU_array_bias_oc16, SiLU_array_bias_oc8, SiLU_array_bias_full
 .type SiLU, %function
 .type SiLU_array, %function
-.type SiLU_array_bias, %function
+.type SiLU_array_bias_oc16, %function
 .type SiLU_array_bias_oc8, %function
 .type SiLU_array_bias_full, %function
 // no stack, 4 input channel read in loop
@@ -162,7 +162,7 @@ SiLU_array:
 
     ret
 
-SiLU_array_bias:
+SiLU_array_bias_oc16:
     // x0 : input address
     // x1 : bias
     // x2 : SIZE
@@ -187,7 +187,7 @@ SiLU_array_bias:
 
     lsr x10, x2, #4
     ld1     {v28.4s, v29.4s, v30.4s, v31.4s}, [x8], #64       // bias for 16 oc
-.main_loop:    
+.main_loop_oc16:    
 
 
     // later optimization:  ********************************** ********************************** later optimization **********************************
@@ -373,7 +373,7 @@ SiLU_array_bias:
 
 
     subs    x10, x10, #1
-    bgt .main_loop
+    bgt .main_loop_oc16
 
     ret
 
