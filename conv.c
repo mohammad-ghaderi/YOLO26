@@ -131,7 +131,7 @@ void pack(float *weights, float *pack_w, int IC, int OC, int nr) {
     }
 }
 
-void pointwise_conv5x16(float *inp, float *weights, float *output, int IC, int OC, int SIZE) {
+void pointwise_conv5x16(float *inp, float *weights, float *output, int IC, int OC, int SIZE, int gap) {
     int nr = 16, mr = 5;
     // float pack_w[IC*OC];
     // pack(weights, pack_w, IC, OC, nr);
@@ -139,7 +139,7 @@ void pointwise_conv5x16(float *inp, float *weights, float *output, int IC, int O
     for (int ih = 0; ih < SIZE; ih++) {
         for (int iw = 0; iw < SIZE; iw+=mr) {
             for (int oc = 0; oc < OC; oc+=nr) {
-                point_wise_5x16(inp+(ih*SIZE+iw)*IC, weights+oc*IC, output+(ih*SIZE+iw)*OC+oc, IC, OC, (OC-nr)*4);
+                point_wise_5x16(inp+(ih*SIZE+iw)*IC, weights+oc*IC, output+(ih*SIZE+iw)*(OC+gap)+oc, IC, OC, (OC+gap-nr)*4);
             }
         }
     }

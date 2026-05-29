@@ -36,7 +36,7 @@ void conv3x3nr8(float *input, float *weights, float *output, int size, int IC, i
 void point_wise_5x16(float *inp, float *weights, float *output, int IC, int OC, int output_stride);
 void point_wise_5x20(float *inp, float *weights, float *output, int IC, int OC, int output_stride);
 
-void pointwise_conv5x16(float *inp, float *weights, float *output, int IC, int OC, int SIZE);
+void pointwise_conv5x16(float *inp, float *weights, float *output, int IC, int OC, int SIZE, int gap);
 void pointwise_conv5x20(float *inp, float *weights, float *output, int IC, int OC, int SIZE);
 
 void depth_wise_c4(float *inp, float *weights, float *output, int OC, int SIZE);
