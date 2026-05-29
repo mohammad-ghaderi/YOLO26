@@ -23,6 +23,7 @@ void SiLU_array_bias_oc16(float *inp, float *bias, int SIZE);
 void SiLU_array_bias_oc8(float *inp, float *bias, int SIZE);
 void SiLU_array_bias_full(float *inp, float *bias, int SIZE, int OC);
 void bias_act_d_padd_oc32(float *inp, float *bias, float *out);
+void bias_act_sum_oc16(float *inp, float *bias, float *X, float *out, int SIZE, int output_stride);
 
 
 void here() {
@@ -76,16 +77,13 @@ int main() {
 
     IC = 8; OC = 16;
     
-    // add_padding_backward(arr1, SIZE, IC);
-    // winograd_f23(arr1, weights, arr3, SIZE, IC, OC);
-    // SiLU_array_bias_oc16(arr3, weights+OC*IC*16, OUT*OUT*OC);
-
-    // writeArrayToFile(arr3, OUT*OUT*OC, "out/wino.txt", 0);
+    add_padding_backward(arr1, SIZE, IC);
+    winograd_f23(arr1, weights, arr3, SIZE, IC, OC);
+    
+    bias_act_sum_oc16(arr3, weights+OC*IC*16, arr2+OC, arr2+2*OC, OUT, 2*OC*4);
+    writeArrayToFile(arr2, OUT*OUT*OC*3, "out/out.txt", 0);
     
     here();
-    
-
-
 
     return 0;
 }
