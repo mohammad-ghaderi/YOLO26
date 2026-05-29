@@ -54,12 +54,13 @@ int main() {
     SiLU_array_bias_oc16(arr2, weights+IC*OC*9, OUT*OUT*OC);
     weights += IC*OC*9+OC;
 
-    IC = OC; SIZE = OUT; OC = 32; OUT /= 2;
+    IC = OC; SIZE = OUT; OC = 32; OUT = SIZE/2;
 
     conv3x3nr8(arr2, weights, arr1, SIZE, IC, OC, stride);
     SiLU_array_bias_full(arr1, weights+IC*OC*9, OUT*OUT*OC, OC);
     weights += IC*OC*9+OC;
     
+    /////////////////////////////  C3K2  ////////////////////////////////////////////
     IC = OC; SIZE = OUT; stride = 1;
     pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE, 16);
     // SiLU_array_bias_full(arr2, weights+IC*OC, OUT*OUT*OC, OC);
@@ -68,7 +69,6 @@ int main() {
     weights += IC*OC+OC;
 
     IC = 16; OC = 8;
-    
     weights += 48*64+64; // skip the conv1x1 cv2 weights and bias (IC=48 OC=64)
 
     winograd_f23(next_arr, weights, arr1, SIZE, IC, OC);
@@ -79,9 +79,30 @@ int main() {
     
     add_padding_backward(arr1, SIZE, IC);
     winograd_f23(arr1, weights, arr3, SIZE, IC, OC);
-    
     bias_act_sum_oc16(arr3, weights+OC*IC*16, arr2+OC, arr2+2*OC, OUT, 2*OC*4);
-    writeArrayToFile(arr2, OUT*OUT*OC*3, "out/out.txt", 0);
+
+    weights -= (8*16*16+8 + 48*64+64);
+    
+    IC = 48; OC = 64;
+    pointwise_conv5x16(arr2, weights, arr1, IC, OC, SIZE, 0);
+    SiLU_array_bias_full(arr1, weights+OC*IC, OUT*OUT*OC, OC);
+    //////////////////////////////////////////////////////////////////////////////////////
+
+    
+    weights += (8*16*16+8 + 48*64+64 + 8*16*16+16);
+    IC = OC; OUT = SIZE/2; stride = 2;
+    conv3x3nr8(arr1, weights, arr2, SIZE, IC, OC, stride);
+    SiLU_array_bias_full(arr2, weights+IC*OC*9, OUT*OUT*OC, OC);
+    weights += IC*OC*9+OC;
+
+
+    /////////////////////////////  C3K2  ////////////////////////////////////////////
+    stride = 1; SIZE = OUT;
+    memset(arr1, 0, sizeof(float)*SIZE*SIZE*OC*3);
+    pointwise_conv5x16(arr2, weights, arr1, IC, OC, SIZE, 0); // make it 32 later
+    SiLU_array_bias_full(arr1, weights+IC*OC, OUT*OUT*OC, OC);
+
+    writeArrayToFile(arr1, OUT*OUT*OC*3, "out/out.txt", 0);
     
     here();
 
