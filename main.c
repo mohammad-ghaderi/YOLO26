@@ -23,8 +23,9 @@ void SiLU_array_bias_oc16(float *inp, float *bias, int SIZE);
 void SiLU_array_bias_oc8(float *inp, float *bias, int SIZE);
 void SiLU_array_bias_full(float *inp, float *bias, int SIZE, int OC);
 void bias_act_d_padd_oc32(float *inp, float *bias, float *out);
+void bias_act_d_padd(float *inp, float *bias, float *out, int SIZE, int IC, int OC);
 void bias_act_sum_oc16(float *inp, float *bias, float *X, float *out, int SIZE, int output_stride);
-
+void bias_act_sum(float *inp, float *bias, float *X, float *out, int SIZE, int output_stride, int OC);
 
 void here() {
     return;
@@ -63,7 +64,6 @@ int main() {
     /////////////////////////////  C3K2  ////////////////////////////////////////////
     IC = OC; SIZE = OUT; stride = 1;
     pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE, 16);
-    // SiLU_array_bias_full(arr2, weights+IC*OC, OUT*OUT*OC, OC);
     float *next_arr = arr2 + OUT*OUT*(OC+16);
     bias_act_d_padd_oc32(arr2, weights+IC*OC, next_arr);
     weights += IC*OC+OC;
@@ -99,11 +99,30 @@ int main() {
     /////////////////////////////  C3K2  ////////////////////////////////////////////
     stride = 1; SIZE = OUT;
     memset(arr1, 0, sizeof(float)*SIZE*SIZE*OC*3);
-    pointwise_conv5x16(arr2, weights, arr1, IC, OC, SIZE, 0); // make it 32 later
-    SiLU_array_bias_full(arr1, weights+IC*OC, OUT*OUT*OC, OC);
+    pointwise_conv5x16(arr2, weights, arr1, IC, OC, SIZE, 32); // make it 32 later
+    next_arr = arr1 + OUT*OUT*(OC+32);
 
-    writeArrayToFile(arr1, OUT*OUT*OC*3, "out/out.txt", 0);
+    bias_act_d_padd(arr1, weights+IC*OC, next_arr, SIZE, IC, OC);
+    weights += IC*OC+OC;
+    weights += 96*128+128; // skip the conv1x1 cv2 weights and bias (IC=96 OC=128)
+    IC = 32; OC = 16;
+    winograd_f23(next_arr, weights, arr2, SIZE, IC, OC);
+    SiLU_array_bias_oc16(arr2, weights+OC*IC*16, OUT*OUT*OC);
+    weights += OC*IC*16+OC;
     
+    IC = OC; OC = 32;
+    add_padding_backward(arr2, SIZE, IC);
+    winograd_f23(arr2, weights, arr3, SIZE, IC, OC);
+    bias_act_sum(arr3, weights+OC*IC*16, arr1+OC, arr1+2*OC, OUT, 2*OC*4, OC);
+    weights -= (32*16*16+16 + 96*128+128);
+
+    IC = 96; OC = 128;
+    pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE, 0);
+    SiLU_array_bias_full(arr2, weights+OC*IC, OUT*OUT*OC, OC);
+    //////////////////////////////////////////////////////////////////////////////////////
+    
+    writeArrayToFile(arr2, OUT*OUT*OC, "out/out.txt", 0);
+
     here();
 
     return 0;

@@ -20,7 +20,7 @@ LDFLAGS := -lm
 # Source files
 SRC := main.c  tools/tools.c buffer.s  padding.s indirection.s \
         conv.c buffer.s winograd.c activation_function.s loader.c \
-       $(wildcard microkernels/*.s)
+       $(wildcard microkernels/*.s fused_ops/*.s)
 
 TARGET := conv
 
