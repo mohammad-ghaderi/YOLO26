@@ -242,8 +242,9 @@ bias_act_sum:
     // x2 : X to sum
     // x3 : output address
     // x4 : SIZE
-    // x5 : X & Output stride
+    // x5 : Output stride
     // x6 : OC
+    // x7 : X stride
 
     ldr     q20, exp_pack1          // v20 = {hi, lo, LOG2EF, 0.5}
     ldr     q21, exp_pack2          // v21 = {c1, c2 , p4, p5}
@@ -464,7 +465,7 @@ bias_act_sum:
 
     // ------------------------------------------------------
 
-    add     x2, x2, x5
+    add     x2, x2, x7
     add     x3, x3, x5
 
     subs    x11, x11, #1
