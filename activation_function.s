@@ -510,6 +510,7 @@ SiLU_array_bias_full:
     // x1 : bias
     // x2 : SIZE
     // x3 : OC
+    // x4 : output stride
 
     ldr     q20, exp_pack1          // v20 = {hi, lo, LOG2EF, 0.5}
     ldr     q21, exp_pack2          // v21 = {c1, c2 , p4, p5}
@@ -720,6 +721,7 @@ SiLU_array_bias_full:
     bne  ._not_end_of_OC
     mov x8, x1
     lsr     x11, x3, #4             // OC/16
+    add x0, x0, x4                 // skip the gap
 ._not_end_of_OC:
 
     subs    x10, x10, #16
