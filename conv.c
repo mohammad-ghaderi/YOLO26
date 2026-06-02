@@ -16,6 +16,10 @@ void conv3x3nr8(float *input, float *weights, float *output, int size, int IC, i
     int nr = 8;
     int mr = 4;
     int block_y = 8, block_x = 8;
+    if (OUT == 20) {
+        block_y = 4;
+        block_x = 4;
+    }
     
     add_padding_backward(input, size, IC);      // later i join this with last layer activation function section, to save some time
 
