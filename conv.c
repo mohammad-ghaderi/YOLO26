@@ -149,6 +149,21 @@ void pointwise_conv5x16(float *inp, float *weights, float *output, int IC, int O
     }
 }
 
+void pointwise_conv_bias_5x16(float *inp, float *weights, float *output, int IC, int OC, int SIZE, int gap) {
+    int nr = 16, mr = 5;
+    // float pack_w[IC*OC];
+    // pack(weights, pack_w, IC, OC, nr);
+    float *bias = weights + OC*IC;
+
+    for (int ih = 0; ih < SIZE; ih++) {
+        for (int iw = 0; iw < SIZE; iw+=mr) {
+            for (int oc = 0; oc < OC; oc+=nr) {
+                point_wise_bias_5x16(inp+(ih*SIZE+iw)*IC, weights+oc*IC, bias+oc, output+(ih*SIZE+iw)*(OC+gap)+oc, IC, OC, (OC+gap-nr)*4);
+            }
+        }
+    }
+}
+
 void pointwise_conv5x20(float *inp, float *weights, float *output, int IC, int OC, int SIZE) {
     int nr = 20, mr = 5;
     // float pack_w[IC*OC];

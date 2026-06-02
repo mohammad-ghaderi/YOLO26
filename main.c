@@ -140,8 +140,12 @@ int main() {
     C3K2_C3K_True(arr2, weights, SIZE, IC, OC);                         // 8) C3K2 
     weights += 459776;
 
+
+    IC = 256; OC = 128;
+    pointwise_conv_bias_5x16(arr2, weights, arr1, IC, OC, SIZE, 3*OC);
     
-    // writeArrayToFile(arr2, OUT*OUT*OC, "out/out.txt", 0);
+    
+    writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
     
     
     // printf("W : %f\n", weights[0]);
