@@ -3,6 +3,7 @@
 #include <time.h>
 #include "tools/tools.h"
 #include "conv.h"
+#include "func.h"
 #include "loader.h"
 #include <arm_neon.h>
 
@@ -140,10 +141,12 @@ int main() {
     C3K2_C3K_True(arr2, weights, SIZE, IC, OC);                         // 8) C3K2 
     weights += 459776;
 
-
     IC = 256; OC = 128;
+    memset(arr1, 0, SIZE*SIZE*512*4);
     pointwise_conv_bias_5x16(arr2, weights, arr1, IC, OC, SIZE, 3*OC);
-    
+
+    here();
+    maxpool_3_5x5(arr1, 3*OC*4, 4*OC*4, 4*OC*4*SIZE);
     
     writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
     
