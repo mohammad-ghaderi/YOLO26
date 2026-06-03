@@ -173,17 +173,17 @@ maxpool_3_5x5:
     add x7, x7, x2
     add x8, x8, x2
 
-    st1     {v1.4s}, [x6] 
-    st1     {v17.4s}, [x7]
-    st1     {v22.4s}, [x8]
+    st1     {v0.4s}, [x6] 
+    st1     {v16.4s}, [x7]
+    st1     {v21.4s}, [x8]
 
     add x6, x6, x2
     add x7, x7, x2
     add x8, x8, x2
 
-    st1     {v2.4s}, [x6] 
-    st1     {v18.4s}, [x7]
-    st1     {v23.4s}, [x8]
+    st1     {v1.4s}, [x6] 
+    st1     {v17.4s}, [x7]
+    st1     {v22.4s}, [x8]
 
     add x5, x5, #16
     subs x1, x1, #4
