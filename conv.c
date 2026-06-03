@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include "conv.h"
+#include "func.h"
 #include "tools/tools.h"
 #include <time.h>
 
