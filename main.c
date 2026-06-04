@@ -147,8 +147,10 @@ int main() {
 
     here();
     maxpool_3_5x5(arr1, 3*OC*4, 4*OC*4, 4*OC*4*SIZE);
+    maxpool_3_5x5(arr1+128, 3*OC*4, 4*OC*4, 4*OC*4*SIZE);
+    maxpool_3_5x5(arr1+256, 3*OC*4, 4*OC*4, 4*OC*4*SIZE);
     
-    writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
+    writeArrayToFile(arr1, OUT*OUT*OC*4, "out/out.txt", 0);
     
     
     // printf("W : %f\n", weights[0]);
