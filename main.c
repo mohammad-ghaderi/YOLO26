@@ -136,24 +136,28 @@ int main() {
     weights += IC*OC*9+OC;
     
     // ////////////////// C3K2 [C3K = True] ///////////////////////////////////
-
     IC = 256; OC = 256; SIZE = OUT; stride = 1;
     C3K2_C3K_True(arr2, weights, SIZE, IC, OC);                         // 8) C3K2 
     weights += 459776;
-
+    
+    //////////////////////////// SPPF ////////////////////////////////////  9)
     IC = 256; OC = 128;
-    memset(arr1, 0, SIZE*SIZE*512*4);
     pointwise_conv_bias_5x16(arr2, weights, arr1, IC, OC, SIZE, 3*OC);
-
-    here();
+    weights += IC*OC+OC;
+    
     maxpool_3_5x5(arr1, 3*OC*4, 4*OC*4, 4*OC*4*SIZE);
     maxpool_3_5x5(arr1+128, 3*OC*4, 4*OC*4, 4*OC*4*SIZE);
     maxpool_3_5x5(arr1+256, 3*OC*4, 4*OC*4, 4*OC*4*SIZE);
     
-    writeArrayToFile(arr1, OUT*OUT*OC*4, "out/out.txt", 0);
+    IC = 512; OC = 256;
+    pointwise_conv5x16(arr1, weights, arr3, IC, OC, SIZE, 0);
+    bias_act_sum(arr3, weights+OC*IC, arr2, arr1, OUT, 0, OC, 0);
+    weights += IC*OC+OC;
+    ////////////////////////////////////////////////////////////////////
+
+
+ 
     
-    
-    // printf("W : %f\n", weights[0]);
     
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
