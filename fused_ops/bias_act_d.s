@@ -1,15 +1,16 @@
 .global bias_act_d
 .type bias_act_d, %function
 
-// add bias and SiLU activation function, and store, also store in the at the end with padding for next convolution
+// add bias and SiLU activation function, and store, also store in the at the end for next convolution
 
 bias_act_d:
     // x0: input pointer
     // x1: bias pointer
-    // x2: output with padding
+    // x2: output
     // x3: SIZE
     // x4: IC
     // x5: OC
+    // x6: gap
   
     ldr     q20, exp_pack1          // v20 = {hi, lo, LOG2EF, 0.5}
     ldr     q21, exp_pack2          // v21 = {c1, c2 , p4, p5}
@@ -413,7 +414,7 @@ bias_act_d:
     bgt .oc_second_half_loop
 
     // -------------------------------------------
-    add x0, x0, x5, lsl #1  // make a gap for last answer (OC/2 *4bytes = OC*2)
+    add x0, x0, x6  // make a gap for last answer (OC/2 *4bytes = OC*2)
     // ------------------------------------------------------
     subs   x11, x11, #1
     bgt .ow_loop

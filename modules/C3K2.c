@@ -13,7 +13,7 @@ void C3K2_C3K_True(float *arr, float *weights, int SIZE, int IC, int OC) {
     int stride = 1, OUT = SIZE;
     pointwise_conv5x16(arr, weights, arrt2, IC, OC, SIZE, OC/2);          // cv1
     float *next_arr = arrt2 + OUT*OUT*(OC+OC/2);
-    bias_act_d(arrt2, weights+IC*OC, next_arr, SIZE, IC, OC);
+    bias_act_d(arrt2, weights+IC*OC, next_arr, SIZE, IC, OC, OC*2);
     weights += IC*OC+OC;
     
     float *wcv2 = weights;                      // store cv2 weights address

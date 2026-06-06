@@ -12,9 +12,11 @@ void SiLU_array_bias_oc8(float *inp, float *bias, int SIZE);
 void SiLU_array_bias_full(float *inp, float *bias, int SIZE, int OC, int gap);
 void bias_act_d_padd_oc32(float *inp, float *bias, float *out);
 void bias_act_d_padd(float *inp, float *bias, float *out, int SIZE, int IC, int OC);
-void bias_act_d(float *inp, float *bias, float *out, int SIZE, int IC, int OC);
+void bias_act_d(float *inp, float *bias, float *out, int SIZE, int IC, int OC, int gap);
 void bias_act_sum_oc16(float *inp, float *bias, float *X, float *out, int SIZE, int output_stride);
 void bias_act_sum(float *inp, float *bias, float *X, float *out, int SIZE, int output_stride, int OC, int x_stride);
+
+void bias_split_attn(float *inp, float *bias, float *out, int size);
 
 void C3K2_C3K_True(float *arr, float *weights, int SIZE, int IC, int OC);
 
