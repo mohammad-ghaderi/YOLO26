@@ -156,8 +156,32 @@ int main() {
     ////////////////////////////////////////////////////////////////////
 
 
- 
+   ///////////////////////    C2PSA    //////////////////////////////////   10)
+    IC = 256; OC = 256;
+    pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE, 0);           // 10.cv1
+    bias_act_d(arr2, weights+IC*OC, arr3, SIZE, IC, OC, 0);                // arr2 is needed later
+    weights += IC*OC+OC;
+    float *wcv2 = weights;
+    weights += IC*OC+OC;
     
+    IC = 128; OC = 256;
+    pointwise_conv5x16(arr3, weights, arr1, IC, OC, SIZE, 0);           // 10.m0.qvk
+    bias_split_attn(arr1, weights+IC*OC, arr3, 400);
+    weights += IC*OC+OC;
+    
+    float *q1 = arr3;
+    float *k1 = q1 + OUT*OUT*32;
+    float *v1 = k1 + OUT*OUT*32;
+    float *q2 = v1 + OUT*OUT*64;
+    float *k2 = q2 + OUT*OUT*32;
+    float *v2 = k2 + OUT*OUT*32;
+    
+    here();
+    matrix_dot_scale(q1, k1, arr1);
+    
+    writeArrayToFile(arr1, OUT*OUT*OUT*OUT, "out/out.txt", 0);
+    
+    printf("W : %f\n", weights[0]);
     
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
