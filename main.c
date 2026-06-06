@@ -177,7 +177,7 @@ int main() {
     float *v2 = k2 + OUT*OUT*32;
     
     here();
-    matrix_dot_scale(q1, k1, arr1);
+    matrix_dot_scale_softmax(q1, k1, arr1);
     
     writeArrayToFile(arr1, OUT*OUT*OUT*OUT, "out/out.txt", 0);
     
