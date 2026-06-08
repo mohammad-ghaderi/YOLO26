@@ -166,21 +166,21 @@ int main() {
     
     IC = 128; OC = 256;
     pointwise_conv5x16(arr3, weights, arr1, IC, OC, SIZE, 0);           // 10.m0.qvk
+    here();
     bias_split_attn(arr1, weights+IC*OC, arr3, 400);
     weights += IC*OC+OC;
     
     float *q1 = arr3;
     float *k1 = q1 + OUT*OUT*32;
-    float *v1 = k1 + OUT*OUT*32;
-    float *q2 = v1 + OUT*OUT*64;
+    float *q2 = k1 + OUT*OUT*32;
     float *k2 = q2 + OUT*OUT*32;
-    float *v2 = k2 + OUT*OUT*32;
+    float *v = k2 + OUT*OUT*32;
     
-    here();
     matrix_dot_scale_softmax(q1, k1, arr1);
+    matrix_dot_scale_softmax(q2, k2, arr1+400*400);
     
-    writeArrayToFile(arr1, OUT*OUT*OUT*OUT, "out/out.txt", 0);
-    
+    writeArrayToFile(arr1, 2*400*400, "out/out.txt", 0);
+
     printf("W : %f\n", weights[0]);
     
     // clock_t end = clock();
