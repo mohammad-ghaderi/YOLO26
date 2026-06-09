@@ -178,13 +178,19 @@ int main() {
     matrix_dot_scale_softmax(q1, k1, arr1);
     matrix_dot_scale_softmax(q2, k2, arr1+400*400);
     
-    here();
     v_dot_attn(v, arr1, arr4);
     v_dot_attn(v+64*400, arr1+400*400, arr4+64);
     
-    writeArrayToFile(arr4, 128*400, "out/out.txt", 0);
-
+    memset(arr1, 0, 128*400*4);
+    weights += 128*128+128;
+    IC = 128; OC = 128;
     printf("W : %f\n", weights[0]);
+    printf("B : %f\n", weights[OC*9]);
+    here();
+    depthwise_conv_c4r2(v, weights, arr1, OC, SIZE);
+    
+    writeArrayToFile(arr1, 128*400, "out/out.txt", 0);
+
     
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;

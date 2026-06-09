@@ -39,7 +39,7 @@ void pointwise_conv_bias_5x16(float *inp, float *weights, float *output, int IC,
 void pointwise_conv5x20(float *inp, float *weights, float *output, int IC, int OC, int SIZE);
 
 void depth_wise_c4(float *inp, float *weights, float *output, int OC, int SIZE);
-void depth_wise_c4r2(float *inp, float *weights, float *output, int OC, int SIZE, int output_stride);
+void depth_wise_c4r2(float *inp, float *weights, float *output, int OC, int SIZE, int output_stride, float *bias);
 
 void depthwise_conv_c4(float *inp, float *weights, float *output, int OC, int SIZE);
 void depthwise_conv_c4r2(float *inp, float *weights, float *output, int OC, int SIZE);

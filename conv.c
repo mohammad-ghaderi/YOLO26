@@ -206,7 +206,10 @@ void depthwise_conv_c4r2(float *inp, float *weights, float *output, int OC, int 
     float pack_w[OC*9];
     pack_depth(weights, pack_w, OC);
     
-    for (int ocb = 0; ocb < OC; ocb+=4) {
-        depth_wise_c4r2(inp+ocb, pack_w+ocb*9, output+ocb, OC, SIZE, SIZE*OC*4);
+    for (int ocb = 0; ocb < OC/2; ocb+=4) {
+        depth_wise_c4r2(inp+ocb, pack_w+ocb*9, output+ocb, OC*2, SIZE, OC*4, weights+OC*9+ocb);
+    }
+    for (int ocb = OC/2; ocb < OC; ocb+=4) {
+        depth_wise_c4r2(inp+(OC/2*SIZE*SIZE)+ocb-OC/2, pack_w+ocb*9, output+ocb, OC*2, SIZE, OC*4, weights+OC*9+ocb);
     }
 }
