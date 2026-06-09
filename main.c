@@ -166,7 +166,6 @@ int main() {
     
     IC = 128; OC = 256;
     pointwise_conv5x16(arr3, weights, arr1, IC, OC, SIZE, 0);           // 10.m0.qvk
-    here();
     bias_split_attn(arr1, weights+IC*OC, arr3, 400);
     weights += IC*OC+OC;
     
@@ -179,7 +178,11 @@ int main() {
     matrix_dot_scale_softmax(q1, k1, arr1);
     matrix_dot_scale_softmax(q2, k2, arr1+400*400);
     
-    writeArrayToFile(arr1, 2*400*400, "out/out.txt", 0);
+    here();
+    v_dot_attn(v, arr1, arr4);
+    v_dot_attn(v+64*400, arr1+400*400, arr4+64);
+    
+    writeArrayToFile(arr4, 128*400, "out/out.txt", 0);
 
     printf("W : %f\n", weights[0]);
     
