@@ -25,4 +25,6 @@ void maxpool_3_5x5(float *inp, int gap, int next_col, int next_row);
 void matrix_dot_scale_softmax(float *A, float *B, float *C);
 void v_dot_attn(float *v, float *attn, float *output);
 
+void tensor_sum(float *A, float *B, float *output, int number);
+
 #endif

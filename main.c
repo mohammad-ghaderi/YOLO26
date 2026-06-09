@@ -184,11 +184,12 @@ int main() {
     memset(arr1, 0, 128*400*4);
     weights += 128*128+128;
     IC = 128; OC = 128;
+    depthwise_conv_c4r2(v, weights, arr1, OC, SIZE);
+    here();
+    tensor_sum(arr1, arr4, arr1, OUT*OUT*OC);
+    
     printf("W : %f\n", weights[0]);
     printf("B : %f\n", weights[OC*9]);
-    here();
-    depthwise_conv_c4r2(v, weights, arr1, OC, SIZE);
-    
     writeArrayToFile(arr1, 128*400, "out/out.txt", 0);
 
     
