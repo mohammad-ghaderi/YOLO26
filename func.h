@@ -27,5 +27,8 @@ void v_dot_attn(float *v, float *attn, float *output);
 
 void tensor_sum(float *A, float *B, float *output, int number, int out_gap);
 void bias_sum(float *input, float *bias, float *X, float *output, int number);
+void concat_layout(float *input, float *output, int SIZE, int IC, int gap);
+void upsample_concat(float *input, float *output, int SIZE, int IC, int OC);
+
 
 #endif

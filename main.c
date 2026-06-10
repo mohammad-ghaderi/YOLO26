@@ -17,6 +17,8 @@ float arr3[MAX_SIZE];
 float arr4[MAX_SIZE];
 float arr5[MAX_SIZE];
 
+float val[MAX_SIZE];
+
 int SIZE = 640, IC = 3, OC = 16;
 int stride = 2;
 
@@ -126,6 +128,8 @@ int main() {
     // ////////////////// C3K2 [C3K = True] ///////////////////////////////////
     IC = 128; OC = 128; stride = 1; SIZE = OUT;
     C3K2_C3K_True(arr1, weights, SIZE, IC, OC);                         // 6) C3K2 
+    memset(val, 0, 384*40*40*4);
+    concat_layout(arr1, val+2*OC, SIZE, OC, 2*OC*4);
     weights += 115200;
 
     // copy arr1 for future use ******* 40*40
@@ -202,10 +206,15 @@ int main() {
 
     IC = 256; OC = 256;
     pointwise_conv5x16(arr2, wcv2, arr3, IC, OC, SIZE, 0);
-    SiLU_array_bias_full(arr3, wcv2+OC*IC, OUT*OUT*OC, OC, 0);
-    ///////////////////////////////////////////////////////////////////
+    SiLU_array_bias_full(arr3, wcv2+OC*IC, OUT*OUT*OC, OC, 0);      
+    ///////////////////////////////////////////////////////////////////         // i should save arr3 for later
 
-    writeArrayToFile(arr3, OUT*OUT*OC, "out/out.txt", 0);
+    OC = 384; OUT = 2*SIZE;
+    upsample_concat(arr3, val, SIZE, IC, OC);
+    SIZE = OUT;
+
+
+    writeArrayToFile(val, 40*40*384, "out/out.txt", 0);
     
     printf("W : %f\n", weights[0]);
     printf("B : %f\n", weights[OC*IC]);
