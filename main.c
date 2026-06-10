@@ -159,8 +159,7 @@ int main() {
    ///////////////////////    C2PSA    //////////////////////////////////   10)
     IC = 256; OC = 256;
     pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE, 0);           // 10.cv1
-    bias_act_d(arr2, weights+IC*OC, arr3, SIZE, IC, OC, 0);                // arr3 is needed later
-    writeArrayToFile(arr2, OUT*OUT*OC, "out/out.txt", 0);
+    bias_act_d(arr2, weights+IC*OC, arr3, SIZE, IC, OC, 0);                // arr2 and arr3 are needed later
 
     weights += IC*OC+OC;
     float *wcv2 = weights;
@@ -168,10 +167,10 @@ int main() {
     
     IC = 128; OC = 256;
     pointwise_conv5x16(arr3, weights, arr1, IC, OC, SIZE, 0);           // 10.m0.qvk
-    bias_split_attn(arr1, weights+IC*OC, arr2, 400);
+    bias_split_attn(arr1, weights+IC*OC, arr5, 400);
     weights += IC*OC+OC;
     
-    float *q1 = arr2;
+    float *q1 = arr5;
     float *k1 = q1 + OUT*OUT*32;
     float *q2 = k1 + OUT*OUT*32;
     float *k2 = q2 + OUT*OUT*32;
@@ -187,22 +186,26 @@ int main() {
     weights += 128*128+128;
     IC = 128; OC = 128;
     depthwise_conv_c4r2(v, weights, arr1, OC, SIZE);
-    tensor_sum(arr1, arr4, arr1, OUT*OUT*OC);
+    tensor_sum(arr1, arr4, arr1, OUT*OUT*OC, 0);
     pointwise_conv5x16(arr1, wproj, arr4, IC, OC, SIZE, 0);
     bias_sum(arr4, wproj+IC*OC, arr3, arr1, SIZE*SIZE*IC);      // arr1 is needed later
     
     weights += IC*9+OC;
     IC = 128; OC = 256;
-    pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE, 0);
-    SiLU_array_bias_full(arr2, weights+IC*OC, OUT*OUT*OC, OC, 0);
+    pointwise_conv5x16(arr1, weights, arr4, IC, OC, SIZE, 0);
+    SiLU_array_bias_full(arr4, weights+IC*OC, OUT*OUT*OC, OC, 0);
     
     weights += IC*OC+OC;
     IC = 256; OC = 128;
-    pointwise_conv_bias_5x16(arr2, weights, arr3, IC, OC, SIZE, 0);
-    tensor_sum(arr3, arr1, arr1, OUT*OUT*OC);
+    pointwise_conv_bias_5x16(arr4, weights, arr3, IC, OC, SIZE, 0);
+    tensor_sum(arr3, arr1, arr2+OC, OUT*OUT*OC, OC*4);
 
+    IC = 256; OC = 256;
+    pointwise_conv5x16(arr2, wcv2, arr3, IC, OC, SIZE, 0);
+    SiLU_array_bias_full(arr3, wcv2+OC*IC, OUT*OUT*OC, OC, 0);
+    ///////////////////////////////////////////////////////////////////
 
-    // writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
+    writeArrayToFile(arr3, OUT*OUT*OC, "out/out.txt", 0);
     
     printf("W : %f\n", weights[0]);
     printf("B : %f\n", weights[OC*IC]);

@@ -7,6 +7,7 @@ tensor_sum:
     // x1: B address
     // x2: output address
     // x3: number
+    // x4: output gap
 
 .loop:
     // 0:31
@@ -81,6 +82,8 @@ tensor_sum:
 
     st1     {v0.4s, v1.4s, v2.4s, v3.4s}, [x2], #64
     st1     {v4.4s, v5.4s, v6.4s, v7.4s}, [x2], #64
+
+    add x2, x2, x4
 
     subs x3, x3, #128
     bgt .loop
