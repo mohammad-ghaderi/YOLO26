@@ -18,6 +18,8 @@ float arr4[MAX_SIZE];
 float arr5[MAX_SIZE];
 
 float val[MAX_SIZE];
+float val2[MAX_SIZE];
+float val3[MAX_SIZE];
 
 int SIZE = 640, IC = 3, OC = 16;
 int stride = 2;
@@ -116,7 +118,8 @@ int main() {
     pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE, 0);
     SiLU_array_bias_full(arr2, weights+OC*IC, OUT*OUT*OC, OC, 0);
     //////////////////////////////////////////////////////////////////////////////////////
-    
+    memset(val2, 0, 256*80*80*4);
+    concat_layout(arr2, val2+OC, SIZE, OC, OC*4);
     // copy arr2 for future use ******* 80*80
 
     weights += (32*16*16+16 + 96*128+128 + 16*32*16+32);
@@ -128,7 +131,6 @@ int main() {
     // ////////////////// C3K2 [C3K = True] ///////////////////////////////////
     IC = 128; OC = 128; stride = 1; SIZE = OUT;
     C3K2_C3K_True(arr1, weights, SIZE, IC, OC);                         // 6) C3K2 
-    memset(val, 0, 384*40*40*4);
     concat_layout(arr1, val+2*OC, SIZE, OC, 2*OC*4);
     weights += 115200;
 
@@ -203,6 +205,7 @@ int main() {
     IC = 256; OC = 128;
     pointwise_conv_bias_5x16(arr4, weights, arr3, IC, OC, SIZE, 0);
     tensor_sum(arr3, arr1, arr2+OC, OUT*OUT*OC, OC*4);
+    weights += IC*OC+OC;
 
     IC = 256; OC = 256;
     pointwise_conv5x16(arr2, wcv2, arr3, IC, OC, SIZE, 0);
@@ -211,15 +214,41 @@ int main() {
 
     OC = 384; OUT = 2*SIZE;
     upsample_concat(arr3, val, SIZE, IC, OC);
+
+    SIZE = OUT; IC = OC; OC = 128;
+    C3K2_C3K_True(val, weights, SIZE, IC, OC);      // val is needed later
+    weights += 147968;
+    
+    IC = 128; OC = 256; OUT = 2*SIZE;
+    upsample_concat(val, val2, SIZE, IC, OC);
+    
+    SIZE = OUT; IC = OC; OC = 64;
+    C3K2_C3K_True(val2, weights, SIZE, IC, OC);     // val2 is needed later
+    weights += 41216;
+
+    IC = OC; OUT = SIZE/2; stride = 2;
+    conv3x3nr8(val2, weights, arr1, SIZE, IC, OC, stride);
+    SiLU_array_bias_full(arr1, weights+IC*OC*9, OUT*OUT*OC, OC, 0);
+    weights += IC*OC*9+OC;
+
     SIZE = OUT;
+    // could be optimize later
+    concat_layout(arr1, val3, SIZE, 64, 128*4);
+    concat_layout(val, val3+64, SIZE, 128, 64*4);
 
+    IC = 192; OC = 128; stride = 1;
+    C3K2_C3K_True(val3, weights, SIZE, IC, OC);     // val3 is needed later
+    weights += 123392;
+    
+    IC = OC; OUT = SIZE/2; stride = 2;
+    conv3x3nr8(val3, weights, arr1, SIZE, IC, OC, stride);
+    SiLU_array_bias_full(arr1, weights+IC*OC*9, OUT*OUT*OC, OC, 0);
 
-    writeArrayToFile(val, 40*40*384, "out/out.txt", 0);
+    writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
     
     printf("W : %f\n", weights[0]);
-    printf("B : %f\n", weights[OC*IC]);
+    printf("B : %f\n", weights[OC*IC*9]);
 
-    
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
     // printf("%.6f #\n", time_spent);
