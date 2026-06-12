@@ -2,7 +2,7 @@
 #ifndef LOADER_H
 #define LOADER_H
 
-#define NUM_PARAM 2519560
+#define NUM_PARAM 2713960
 #define IMAGE_SIZE 640*640*3
 
 extern float params[NUM_PARAM];

@@ -253,8 +253,9 @@ int main() {
 
     ////////////// C3K2 C3K=True attn=True //////////////////////////////
     IC = 384; OC = 256;
-    pointwise_conv5x16(val4, weights, arr1, IC, OC, SIZE, 0);           // 22.cv1
-    bias_act_d(arr1, weights+IC*OC, arr2, SIZE, IC, OC, 0);             // arr1 is needed later
+    memset(arr1, 0, 384*OUT*OUT*4);
+    pointwise_conv5x16(val4, weights, arr1, IC, OC, SIZE, 128);           // 22.cv1
+    bias_act_d(arr1, weights+IC*OC, arr2, SIZE, IC, OC, 128*4);             // arr1 is needed later
     
     weights += IC*OC+OC;
     wcv2 = weights;
@@ -264,23 +265,65 @@ int main() {
     IC = 128; OC = 64;
     float *padded = arr2 + IC*OUT*OUT;
     add_padding(arr2, padded, SIZE, IC);
-    winograd_f23(padded, weights, arr3, SIZE, IC, OC);                  // m0.m0.cv1
-    SiLU_array_bias_full(arr3, weights+OC*IC*16, OUT*OUT*OC, OC, 0);
+    winograd_f23(padded, weights, arr4, SIZE, IC, OC);                  // m0.m0.cv1
+    SiLU_array_bias_full(arr4, weights+OC*IC*16, OUT*OUT*OC, OC, 0);
     weights += OC*IC*16+OC;
     
     IC = OC; OC = 128;
-    add_padding_backward(arr3, SIZE, IC);
-    winograd_f23(arr3, weights, arr4, SIZE, IC, OC);                    // m0.m0.cv2
-    bias_act_sum(arr4, weights+OC*IC*16, arr2, arr5, OUT, 0, OC, 0);
+    add_padding_backward(arr4, SIZE, IC);
+    winograd_f23(arr4, weights, arr5, SIZE, IC, OC);                    // m0.m0.cv2
+    bias_act_sum(arr5, weights+OC*IC*16, arr2, arr3, OUT, 0, OC, 0);
     weights += OC*IC*16+OC;
-    writeArrayToFile(arr5, OUT*OUT*OC, "out/out.txt", 0);
     
+    // PSABlock
+    IC = 128; OC = 256;
+    pointwise_conv5x16(arr3, weights, arr2, IC, OC, SIZE, 0);           // 22.m0.qvk
+    bias_split_attn(arr2, weights+IC*OC, arr5, 400);
+    weights += IC*OC+OC;
+    
+    q1 = arr5;
+    k1 = q1 + OUT*OUT*32;
+    q2 = k1 + OUT*OUT*32;
+    k2 = q2 + OUT*OUT*32;
+    v = k2 + OUT*OUT*32;
+    
+    matrix_dot_scale_softmax(q1, k1, arr2);
+    matrix_dot_scale_softmax(q2, k2, arr2+400*400);
+    
+    v_dot_attn(v, arr2, arr4);
+    v_dot_attn(v+64*400, arr2+400*400, arr4+64);
+    
+    wproj = weights;
+    weights += 128*128+128;
+    IC = 128; OC = 128;
+    depthwise_conv_c4r2(v, weights, arr2, OC, SIZE);
+    tensor_sum(arr2, arr4, arr2, OUT*OUT*OC, 0);
+    pointwise_conv5x16(arr2, wproj, arr4, IC, OC, SIZE, 0);
+    bias_sum(arr4, wproj+IC*OC, arr3, arr2, SIZE*SIZE*IC);      // arr2 is needed later
+    
+    weights += IC*9+OC;
+    IC = 128; OC = 256;
+    pointwise_conv5x16(arr2, weights, arr4, IC, OC, SIZE, 0);
+    SiLU_array_bias_full(arr4, weights+IC*OC, OUT*OUT*OC, OC, 0);
+    
+    weights += IC*OC+OC;
+    IC = 256; OC = 128;
+    pointwise_conv_bias_5x16(arr4, weights, arr3, IC, OC, SIZE, 0);
+    tensor_sum(arr3, arr2, arr1+OC*2, OUT*OUT*OC, 2*OC*4);
+    weights += IC*OC+OC;
+    
+    IC = 384; OC = 256;
+    pointwise_conv5x16(arr1, wcv2, arr2, IC, OC, SIZE, 0);
+    SiLU_array_bias_full(arr2, wcv2+OC*IC, OUT*OUT*OC, OC, 0);          // 22.cv2
+    ///////////////////////////////////////////////////////////////////////////////
 
 
+    // Detect
+
     
-    printf("OUT : %d\n", OUT);
-    printf("W : %f\n", weights[0]);
-    printf("B : %f\n", weights[128*256]);
+    writeArrayToFile(arr2, OUT*OUT*OC, "out/out.txt", 0);
+    printf("W: %f\n", wcv2[0]);
+    printf("W: %f\n", wcv2[OC*IC]);
 
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
