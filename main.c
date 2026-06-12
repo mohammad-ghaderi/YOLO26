@@ -20,6 +20,7 @@ float arr5[MAX_SIZE];
 float val[MAX_SIZE];
 float val2[MAX_SIZE];
 float val3[MAX_SIZE];
+float val4[MAX_SIZE];
 
 int SIZE = 640, IC = 3, OC = 16;
 int stride = 2;
@@ -243,11 +244,43 @@ int main() {
     IC = OC; OUT = SIZE/2; stride = 2;
     conv3x3nr8(val3, weights, arr1, SIZE, IC, OC, stride);
     SiLU_array_bias_full(arr1, weights+IC*OC*9, OUT*OUT*OC, OC, 0);
+    weights += IC*OC*9+OC;
 
-    writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
+    SIZE = OUT;
+    // could be optimize later
+    concat_layout(arr1, val4, SIZE, 128, 256*4);
+    concat_layout(arr3, val4+128, SIZE, 256, 128*4);
+
+    ////////////// C3K2 C3K=True attn=True //////////////////////////////
+    IC = 384; OC = 256;
+    pointwise_conv5x16(val4, weights, arr1, IC, OC, SIZE, 0);           // 22.cv1
+    bias_act_d(arr1, weights+IC*OC, arr2, SIZE, IC, OC, 0);             // arr1 is needed later
     
+    weights += IC*OC+OC;
+    wcv2 = weights;
+    weights += IC*OC+OC;
+
+    // bottle neck
+    IC = 128; OC = 64;
+    float *padded = arr2 + IC*OUT*OUT;
+    add_padding(arr2, padded, SIZE, IC);
+    winograd_f23(padded, weights, arr3, SIZE, IC, OC);                  // m0.m0.cv1
+    SiLU_array_bias_full(arr3, weights+OC*IC*16, OUT*OUT*OC, OC, 0);
+    weights += OC*IC*16+OC;
+    
+    IC = OC; OC = 128;
+    add_padding_backward(arr3, SIZE, IC);
+    winograd_f23(arr3, weights, arr4, SIZE, IC, OC);                    // m0.m0.cv2
+    bias_act_sum(arr4, weights+OC*IC*16, arr2, arr5, OUT, 0, OC, 0);
+    weights += OC*IC*16+OC;
+    writeArrayToFile(arr5, OUT*OUT*OC, "out/out.txt", 0);
+    
+
+
+    
+    printf("OUT : %d\n", OUT);
     printf("W : %f\n", weights[0]);
-    printf("B : %f\n", weights[OC*IC*9]);
+    printf("B : %f\n", weights[128*256]);
 
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
