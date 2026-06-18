@@ -326,8 +326,74 @@ int main() {
     /////////////////// Detect //////////////////////////
 
     ////// one2one.cv3   [scores] ///////
+
+    float *w_cv2 = weights;
+    weights += 127276;
+    
+    // seq0
+    OUT = 80; SIZE = 80; IC = 64; OC = 64;
+    depthwise_conv_c4r2_normal(out80, weights, arr1, OC, SIZE);     // 0.0.0 g=64
+    SiLU_array(arr1, OUT*OUT*OC);
+    weights += OC*9+OC;
+    OC = 80;
+    pointwise_conv5x16(arr1, weights, arr3, IC, OC, SIZE, 0);       // 0.0.1
+    SiLU_array_bias_full(arr3, weights+OC*IC, OUT*OUT*OC, OC, 0);
+    weights += OC*IC+OC;
+    IC = OC;
+    depthwise_conv_c4r2_normal(arr3, weights, arr1, OC, SIZE);      // 0.1.0 g=80
+    SiLU_array(arr1, OUT*OUT*OC);
+    weights += OC*9+OC;
+    pointwise_conv5x16(arr1, weights, arr3, IC, OC, SIZE, 0);       // 0.1.1
+    SiLU_array_bias_full(arr3, weights+OC*IC, OUT*OUT*OC, OC, 0);
+    weights += OC*IC+OC;
+    pointwise_conv_bias_5x16(arr3, weights, arr1, IC, OC, SIZE, 0); // 0.2      // score for 80*80
+    weights += OC*IC+OC;
+
+    // seq1
+    OUT = 40; SIZE = 40; IC = 128; OC = 128;
+    depthwise_conv_c4r2_normal(out40, weights, arr1, OC, SIZE);     // 1.0.0 g=128
+    SiLU_array(arr1, OUT*OUT*OC);
+    weights += OC*9+OC;
+    OC = 80;
+    pointwise_conv5x16(arr1, weights, arr3, IC, OC, SIZE, 0);       // 1.0.1
+    SiLU_array_bias_full(arr3, weights+OC*IC, OUT*OUT*OC, OC, 0);
+    weights += OC*IC+OC;
+    IC = OC;
+    depthwise_conv_c4r2_normal(arr3, weights, arr1, OC, SIZE);      // 1.1.0 g=80
+    SiLU_array(arr1, OUT*OUT*OC);
+    weights += OC*9+OC;
+    pointwise_conv5x16(arr1, weights, arr3, IC, OC, SIZE, 0);       // 1.1.1
+    SiLU_array_bias_full(arr3, weights+OC*IC, OUT*OUT*OC, OC, 0);
+    weights += OC*IC+OC;
+    pointwise_conv_bias_5x16(arr3, weights, arr1, IC, OC, SIZE, 0); // 1.2      // score for 40*40
+    weights += OC*IC+OC;
+
+    // seq2
+    OUT = 20; SIZE = 20; IC = 256; OC = 256;
+    depthwise_conv_c4r2_normal(arr2, weights, arr1, OC, SIZE);      // 2.0.0 g=256
+    SiLU_array(arr1, OUT*OUT*OC);
+    weights += OC*9+OC;
+    OC = 80;
+    pointwise_conv5x16(arr1, weights, arr3, IC, OC, SIZE, 0);       // 2.0.1
+    SiLU_array_bias_full(arr3, weights+OC*IC, OUT*OUT*OC, OC, 0);
+    weights += OC*IC+OC;
+    IC = OC;
+    depthwise_conv_c4r2_normal(arr3, weights, arr1, OC, SIZE);      // 2.1.0 g=80
+    SiLU_array(arr1, OUT*OUT*OC);
+    weights += OC*9+OC;
+    pointwise_conv5x16(arr1, weights, arr3, IC, OC, SIZE, 0);       // 2.1.1
+    SiLU_array_bias_full(arr3, weights+OC*IC, OUT*OUT*OC, OC, 0);
+    weights += OC*IC+OC;
+    pointwise_conv_bias_5x16(arr3, weights, arr1, IC, OC, SIZE, 0); // 2.2      // score for 40*40
+    weights += OC*IC+OC;
+    
+
+    printf("W: %f\n", weights[0]);
+    printf("B: %f\n", weights[OC*9]);
+    writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
     
     ////// one2one.cv2   [boxes] ////////
+    weights = w_cv2;
 
     // seq0
     OUT = 80; SIZE = 80; IC = 64; OC = 16;
@@ -343,6 +409,9 @@ int main() {
     OC = 4;
     point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr1, SIZE, 4*4);
     weights += OC*IC+OC;
+
+
+    writeArrayToFile(arr1, OUT*OUT*OC, "out/last_out.txt", 0);
 
     // seq1
     OUT = 40; SIZE = 40; IC = 128; OC = 16;
@@ -374,11 +443,6 @@ int main() {
     point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr1, SIZE, 4*4);
     weights += OC*IC+OC;
     
-    
-    
-    printf("W: %f\n", weights[0]);
-    printf("B: %f\n", weights[OC*IC*16]);
-    writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
 
 
     // clock_t end = clock();
