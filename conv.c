@@ -213,3 +213,11 @@ void depthwise_conv_c4r2(float *inp, float *weights, float *output, int OC, int 
         depth_wise_c4r2(inp+(OC/2*SIZE*SIZE)+ocb-OC/2, weights+ocb*9, output+ocb, OC*2, SIZE, OC*4, weights+OC*9+ocb);
     }
 }
+
+
+void depthwise_conv_c4r2_normal(float *inp, float *weights, float *output, int OC, int SIZE) {
+    int ocb = 0;
+    for (int ocb = 0; ocb < OC; ocb+=4) {
+        depth_wise_c4r2(inp+ocb, weights+ocb*9, output+ocb, OC*4, SIZE, OC*4, weights+OC*9+ocb);
+    }
+}

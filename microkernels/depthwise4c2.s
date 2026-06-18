@@ -72,7 +72,7 @@ depth_wise_c4r2:
     fmla    v28.4s, v3.4s, v23.4s
     fmla    v29.4s, v3.4s, v22.4s
 
-    mov x15, #19
+    subs x15, x4, #1
 .fisrt_rows_x_loop:
     // col2
     ld1     {v0.4s}, [x10]
@@ -156,7 +156,7 @@ depth_wise_c4r2:
 
     // middle rows
 
-    mov x14, #14
+    subs x14, x4, #6
 .y_loop:
 
     movi    v25.4s, #0  // r1
@@ -190,7 +190,7 @@ depth_wise_c4r2:
     fmla    v28.4s, v3.4s, v23.4s
     fmla    v29.4s, v3.4s, v22.4s
 
-    mov x15, #19
+    subs x15, x4, #1
 ._x_loop:
     // col2
     ld1     {v0.4s}, [x10]
@@ -303,7 +303,7 @@ depth_wise_c4r2:
     fmla    v28.4s, v3.4s, v20.4s
     fmla    v29.4s, v3.4s, v19.4s
 
-    mov x15, #19
+    subs x15, x4, #1
 .last_rows_x_loop:
     // col2
     ld1     {v0.4s}, [x10]

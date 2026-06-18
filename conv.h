@@ -45,6 +45,6 @@ void depth_wise_c4r2(float *inp, float *weights, float *output, int OC, int SIZE
 
 void depthwise_conv_c4(float *inp, float *weights, float *output, int OC, int SIZE);
 void depthwise_conv_c4r2(float *inp, float *weights, float *output, int OC, int SIZE);
-
+void depthwise_conv_c4r2_normal(float *inp, float *weights, float *output, int OC, int SIZE);
 
 #endif
