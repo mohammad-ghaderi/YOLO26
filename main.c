@@ -22,6 +22,10 @@ float val2[MAX_SIZE];
 float val3[MAX_SIZE];
 float val4[MAX_SIZE];
 
+float out80[82*82*64];
+float out40[42*42*128];
+// float out20[20*20*256]; 
+
 int SIZE = 640, IC = 3, OC = 16;
 int stride = 2;
 
@@ -224,7 +228,8 @@ int main() {
     upsample_concat(val, val2, SIZE, IC, OC);
     
     SIZE = OUT; IC = OC; OC = 64;
-    C3K2_C3K_True(val2, weights, SIZE, IC, OC);     // val2 is needed later
+    C3K2_C3K_True(val2, weights, SIZE, IC, OC);
+    for (int i = 0; i < 80*80*64; i++) out80[i] = val2[i];          // out 80*80
     weights += 41216;
 
     IC = OC; OUT = SIZE/2; stride = 2;
@@ -238,7 +243,8 @@ int main() {
     concat_layout(val, val3+64, SIZE, 128, 64*4);
 
     IC = 192; OC = 128; stride = 1;
-    C3K2_C3K_True(val3, weights, SIZE, IC, OC);     // val3 is needed later
+    C3K2_C3K_True(val3, weights, SIZE, IC, OC);
+    for (int i = 0; i < 40*40*128; i++) out40[i] = val3[i];         // out 40*40
     weights += 123392;
     
     IC = OC; OUT = SIZE/2; stride = 2;
@@ -315,15 +321,65 @@ int main() {
     IC = 384; OC = 256;
     pointwise_conv5x16(arr1, wcv2, arr2, IC, OC, SIZE, 0);
     SiLU_array_bias_full(arr2, wcv2+OC*IC, OUT*OUT*OC, OC, 0);          // 22.cv2
-    ///////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////// arr2 20*20
 
+    /////////////////// Detect //////////////////////////
 
-    // Detect
-
+    ////// one2one.cv3   [scores] ///////
     
-    writeArrayToFile(arr2, OUT*OUT*OC, "out/out.txt", 0);
-    printf("W: %f\n", wcv2[0]);
-    printf("W: %f\n", wcv2[OC*IC]);
+    ////// one2one.cv2   [boxes] ////////
+
+    // seq0
+    OUT = 80; SIZE = 80; IC = 64; OC = 16;
+    add_padding_backward(out80, SIZE, IC);
+    winograd_f23(out80, weights, arr1, SIZE, IC, OC);
+    SiLU_array_bias_oc16(arr1, weights+OC*IC*16, OUT*OUT*OC); // later optmization (fuse bias act padd for oc16) *****
+    weights += IC*OC*16+OC;
+    IC = OC;
+    add_padding_backward(arr1, SIZE, IC);
+    winograd_f23(arr1, weights, arr3, SIZE, IC, OC);
+    SiLU_array_bias_oc16(arr3, weights+OC*IC*16, OUT*OUT*OC);
+    weights += IC*OC*16+OC;
+    OC = 4;
+    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr1, SIZE, 4*4);
+    weights += OC*IC+OC;
+
+    // seq1
+    OUT = 40; SIZE = 40; IC = 128; OC = 16;
+    add_padding_backward(out40, SIZE, IC);
+    winograd_f23(out40, weights, arr1, SIZE, IC, OC);
+    SiLU_array_bias_oc16(arr1, weights+OC*IC*16, OUT*OUT*OC); // later optmization (fuse bias act padd for oc16) *****
+    weights += IC*OC*16+OC;
+    IC = OC;
+    add_padding_backward(arr1, SIZE, IC);
+    winograd_f23(arr1, weights, arr3, SIZE, IC, OC);
+    SiLU_array_bias_oc16(arr3, weights+OC*IC*16, OUT*OUT*OC);
+    weights += IC*OC*16+OC;
+    OC = 4;
+    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr1, SIZE, 4*4);
+    weights += OC*IC+OC;
+
+    // seq2
+    OUT = 20; SIZE = 20; IC = 256; OC = 16;
+    add_padding_backward(arr2, SIZE, IC);
+    winograd_f23(arr2, weights, arr1, SIZE, IC, OC);
+    SiLU_array_bias_oc16(arr1, weights+OC*IC*16, OUT*OUT*OC); // later optmization (fuse bias act padd for oc16) *****
+    weights += IC*OC*16+OC;
+    IC = OC;
+    add_padding_backward(arr1, SIZE, IC);
+    winograd_f23(arr1, weights, arr3, SIZE, IC, OC);
+    SiLU_array_bias_oc16(arr3, weights+OC*IC*16, OUT*OUT*OC);
+    weights += IC*OC*16+OC;
+    OC = 4;
+    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr1, SIZE, 4*4);
+    weights += OC*IC+OC;
+    
+    
+    
+    printf("W: %f\n", weights[0]);
+    printf("B: %f\n", weights[OC*IC*16]);
+    writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
+
 
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
