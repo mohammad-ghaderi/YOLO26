@@ -27,7 +27,6 @@ void winograd_f23_v1(float *input, float *weights, float *out1, float *out2, int
 void winograd_f23(float *input, float *weights, float *output, int SIZE, int IC, int OC);
 // void build_indirection(float *input, float **indirection, int size, int IC);
 
-void conv3x3(float *input, float *weights, float *output, int size, int IC, int OC, int version, int thread_cnt, int block_y, int block_x, int stride);
 void conv3x3nr8(float *input, float *weights, float *output, int size, int IC, int OC, int stride);
 
 void point_wise_5x16(float *inp, float *weights, float *output, int IC, int OC, int output_stride);

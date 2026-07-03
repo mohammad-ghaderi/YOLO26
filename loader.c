@@ -14,13 +14,3 @@ int load_weights(void) {
     
     return (n == NUM_PARAM) ? 0 : -1;
 }
-
-int load_image(void) {
-    FILE *fp = fopen("params/img.bin", "rb");
-    if (!fp) return -1;
-    
-    size_t n = fread(img, sizeof(unsigned char), IMAGE_SIZE, fp);
-    fclose(fp);
-    
-    return (n == IMAGE_SIZE) ? 0 : -1;
-}

@@ -13,7 +13,7 @@ CFLAGS := -O0 \
           -march=armv8-a+simd+fp16 \
           -ftree-vectorize \
           -fopenmp \
-          -g
+
 
 LDFLAGS := -lm
 

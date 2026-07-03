@@ -9,7 +9,6 @@ extern float params[NUM_PARAM];
 extern unsigned char img[IMAGE_SIZE];
 
 int load_weights(void);
-int load_image(void);
 
 static const char *class_names[80] = {
     "person",
