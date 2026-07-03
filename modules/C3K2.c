@@ -2,7 +2,6 @@
 #include <string.h>
 #include "../conv.h"
 #include "../func.h"
-#include "../tools/tools.h"
 
 float arrt2[MAX_SIZE];
 float arrt3[MAX_SIZE];

@@ -40,6 +40,9 @@ void pointwise_conv5x20(float *inp, float *weights, float *output, int IC, int O
 void point_wise_bias_ic16oc4(float *inp, float *weights, float *bias, float *output, int SIZE, int output_gap);
 
 
+void point_wise_full(float *inp, float *weights, float *output, int IC, int OC, int SIZE, int output_strid);
+
+
 void depth_wise_c4(float *inp, float *weights, float *output, int OC, int SIZE);
 void depth_wise_c4r2(float *inp, float *weights, float *output, int OC, int SIZE, int output_stride, float *bias);
 

@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include "conv.h"
-#include "tools/tools.h"
-#include <time.h>
 
 void winograd_f23(float *input, float *weights, float *output, int SIZE, int IC, int OC) {
     

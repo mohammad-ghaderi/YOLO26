@@ -138,9 +138,7 @@ void pack(float *weights, float *pack_w, int IC, int OC, int nr) {
 
 void pointwise_conv5x16(float *inp, float *weights, float *output, int IC, int OC, int SIZE, int gap) {
     int nr = 16, mr = 5;
-    // float pack_w[IC*OC];
-    // pack(weights, pack_w, IC, OC, nr);
-
+    
     for (int ih = 0; ih < SIZE; ih++) {
         for (int iw = 0; iw < SIZE; iw+=mr) {
             for (int oc = 0; oc < OC; oc+=nr) {
@@ -152,8 +150,6 @@ void pointwise_conv5x16(float *inp, float *weights, float *output, int IC, int O
 
 void pointwise_conv_bias_5x16(float *inp, float *weights, float *output, int IC, int OC, int SIZE, int gap) {
     int nr = 16, mr = 5;
-    // float pack_w[IC*OC];
-    // pack(weights, pack_w, IC, OC, nr);
     float *bias = weights + OC*IC;
 
     for (int ih = 0; ih < SIZE; ih++) {
@@ -167,8 +163,6 @@ void pointwise_conv_bias_5x16(float *inp, float *weights, float *output, int IC,
 
 void pointwise_conv5x20(float *inp, float *weights, float *output, int IC, int OC, int SIZE) {
     int nr = 20, mr = 5;
-    // float pack_w[IC*OC];
-    // pack(weights, pack_w, IC, OC, nr);
 
     for (int ih = 0; ih < SIZE; ih++) {
         for (int iw = 0; iw < SIZE; iw+=mr) {
@@ -194,8 +188,6 @@ void pack_depth(float *weights, float *pack_w, int OC) {
 } 
 
 void depthwise_conv_c4(float *inp, float *weights, float *output, int OC, int SIZE) {
-    // float pack_w[OC*9];
-    // pack_depth(weights, pack_w, OC);
     
     for (int ocb = 0; ocb < OC; ocb+=4) {
         depth_wise_c4(inp+ocb, weights+ocb*9, output+ocb, OC, SIZE);
@@ -203,9 +195,7 @@ void depthwise_conv_c4(float *inp, float *weights, float *output, int OC, int SI
 }
 
 void depthwise_conv_c4r2(float *inp, float *weights, float *output, int OC, int SIZE) {
-    // float pack_w[OC*9];
-    // pack_depth(weights, pack_w, OC);
-    
+
     for (int ocb = 0; ocb < OC/2; ocb+=4) {
         depth_wise_c4r2(inp+ocb, weights+ocb*9, output+ocb, OC*2, SIZE, OC*4, weights+OC*9+ocb);
     }

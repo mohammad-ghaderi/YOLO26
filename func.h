@@ -7,6 +7,7 @@ void build_indirection(float *input, float **indir, int size, int IC);
 
 void SiLU(float *inp);
 void SiLU_array(float *inp, int SIZE);
+void sigmoid_array(float *inp, int SIZE);
 void SiLU_array_bias_oc16(float *inp, float *bias, int SIZE);
 void SiLU_array_bias_oc8(float *inp, float *bias, int SIZE);
 void SiLU_array_bias_full(float *inp, float *bias, int SIZE, int OC, int gap);
