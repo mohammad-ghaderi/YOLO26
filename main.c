@@ -5,11 +5,15 @@
 #include "conv.h"
 #include "func.h"
 #include "loader.h"
-#include <arm_neon.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "tools/stb_image.h"
 
+typedef struct {
+    float x1, y1, x2, y2;
+    float prob;
+    int class_idx;
+} Detect;
 
 float arr1[MAX_SIZE];
 float arr2[MAX_SIZE];
@@ -25,6 +29,7 @@ float val4[MAX_SIZE];
 float out80[82*82*64];
 float out40[42*42*128];
 // float out20[20*20*256]; 
+const float THRESHOLD = 0.25f;
 
 int SIZE = 640, IC = 3, OC = 16;
 int stride = 2;
@@ -123,7 +128,7 @@ int main() {
     pointwise_conv5x16(arr1, weights, arr2, IC, OC, SIZE, 0);
     SiLU_array_bias_full(arr2, weights+OC*IC, OUT*OUT*OC, OC, 0);
     //////////////////////////////////////////////////////////////////////////////////////
-    memset(val2, 0, 256*80*80*4);
+
     concat_layout(arr2, val2+OC, SIZE, OC, OC*4);
     // copy arr2 for future use ******* 80*80
 
@@ -259,7 +264,6 @@ int main() {
 
     ////////////// C3K2 C3K=True attn=True //////////////////////////////
     IC = 384; OC = 256;
-    memset(arr1, 0, 384*OUT*OUT*4);
     pointwise_conv5x16(val4, weights, arr1, IC, OC, SIZE, 128);           // 22.cv1
     bias_act_d(arr1, weights+IC*OC, arr2, SIZE, IC, OC, 128*4);             // arr1 is needed later
     
@@ -327,6 +331,9 @@ int main() {
 
     ////// one2one.cv3   [scores] ///////
 
+    float scores[80*80+40*40+20*20];
+    int idx[80*80+40*40+20*20];
+
     float *w_cv2 = weights;
     weights += 127276;
     
@@ -348,6 +355,19 @@ int main() {
     weights += OC*IC+OC;
     pointwise_conv_bias_5x16(arr3, weights, arr1, IC, OC, SIZE, 0); // 0.2      // score for 80*80
     weights += OC*IC+OC;
+    sigmoid_array(arr1, OUT*OUT*OC);
+
+    for (int i = 0; i < OUT*OUT; i++) {
+        float mx = 0;
+        int index = 0;
+        for (int j = 0; j < OC; j++) {
+            if (arr1[i*OC+j] > mx) {
+                mx = arr1[i*OC+j]; index = j;
+            }
+        }
+        scores[i] = mx;
+        idx[i] = index;
+    }
 
     // seq1
     OUT = 40; SIZE = 40; IC = 128; OC = 128;
@@ -366,7 +386,20 @@ int main() {
     SiLU_array_bias_full(arr3, weights+OC*IC, OUT*OUT*OC, OC, 0);
     weights += OC*IC+OC;
     pointwise_conv_bias_5x16(arr3, weights, arr1, IC, OC, SIZE, 0); // 1.2      // score for 40*40
-    weights += OC*IC+OC;
+    weights += OC*IC+OC;    
+    sigmoid_array(arr1, OUT*OUT*OC);
+
+    for (int i = 0; i < OUT*OUT; i++) {
+        float mx = 0;
+        int index = 0;
+        for (int j = 0; j < OC; j++) {
+            if (arr1[i*OC+j] > mx) {
+                mx = arr1[i*OC+j]; index = j;
+            }
+        }
+        scores[80*80+i] = mx;
+        idx[80*80+i] = index;
+    }
 
     // seq2
     OUT = 20; SIZE = 20; IC = 256; OC = 256;
@@ -386,12 +419,49 @@ int main() {
     weights += OC*IC+OC;
     pointwise_conv_bias_5x16(arr3, weights, arr1, IC, OC, SIZE, 0); // 2.2      // score for 40*40
     weights += OC*IC+OC;
-    
+    sigmoid_array(arr1, OUT*OUT*OC);
 
-    printf("W: %f\n", weights[0]);
-    printf("B: %f\n", weights[OC*9]);
-    writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
-    
+    for (int i = 0; i < OUT*OUT; i++) {
+        float mx = 0;
+        int index = 0;
+        for (int j = 0; j < OC; j++) {
+            if (arr1[i*OC+j] > mx) {
+                mx = arr1[i*OC+j]; index = j;
+            }
+        }
+        scores[80*80+40*40+i] = mx;
+        idx[80*80+40*40+i] = index;
+    }
+
+    float top_val[300];
+    int top_idx[300];
+    int count = 0;
+    for (int i = 0; i < 8400; i++) {
+        float v = scores[i];
+
+        if (v < THRESHOLD)
+            continue;
+
+        if (count < 300) {
+            top_idx[count] = i;
+            top_val[count] = v;
+            count++;
+            continue;
+        }
+
+        /* find current smallest among top 300 */
+        int min_pos = 0;
+        for (int j = 1; j < 300; j++) {
+            if (top_val[j] < top_val[min_pos])
+                min_pos = j;
+        }
+
+        if (v > top_val[min_pos]) {
+            top_val[min_pos] = v;
+            top_idx[min_pos] = i;
+        }
+    }
+
     ////// one2one.cv2   [boxes] ////////
     weights = w_cv2;
 
@@ -407,11 +477,8 @@ int main() {
     SiLU_array_bias_oc16(arr3, weights+OC*IC*16, OUT*OUT*OC);
     weights += IC*OC*16+OC;
     OC = 4;
-    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr1, SIZE, 4*4);
+    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr4, SIZE, 4*4);
     weights += OC*IC+OC;
-
-
-    writeArrayToFile(arr1, OUT*OUT*OC, "out/last_out.txt", 0);
 
     // seq1
     OUT = 40; SIZE = 40; IC = 128; OC = 16;
@@ -425,7 +492,7 @@ int main() {
     SiLU_array_bias_oc16(arr3, weights+OC*IC*16, OUT*OUT*OC);
     weights += IC*OC*16+OC;
     OC = 4;
-    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr1, SIZE, 4*4);
+    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr4+80*80*4, SIZE, 4*4);
     weights += OC*IC+OC;
 
     // seq2
@@ -440,10 +507,38 @@ int main() {
     SiLU_array_bias_oc16(arr3, weights+OC*IC*16, OUT*OUT*OC);
     weights += IC*OC*16+OC;
     OC = 4;
-    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr1, SIZE, 4*4);
+    point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr4+(80*80+40*40)*4, SIZE, 4*4);
     weights += OC*IC+OC;
+
+    Detect result[300];
+
+    int rel_i, base, mult;
+    for (int i = 0; i < count; i++) {
+        int index = top_idx[i];
+        if (index < 80*80) {
+            base = 80;
+            mult = 8;
+        } else if (index < 80*80+40*40) {
+            rel_i = index - 80*80;
+            base = 40;
+            mult = 16;
+        } else {
+            rel_i = index - (80*80+40*40);
+            base = 20;
+            mult = 32;
+        }
+        result[i].prob = top_val[i];
+        result[i].class_idx = idx[index];
+        result[i].x1 = (((rel_i%base)+0.5) - arr4[index*4+0])*mult;
+        result[i].y1 = (((rel_i/base)+0.5) - arr4[index*4+1])*mult;
+        result[i].x2 = (((rel_i%base)+0.5) + arr4[index*4+2])*mult;
+        result[i].y2 = (((rel_i/base)+0.5) + arr4[index*4+3])*mult;
+
+        printf("(%f %f %f %f) prob:%f class: %d\n", result[i].x1, result[i].y1, result[i].x2, result[i].y2, result[i].prob, result[i].class_idx);
+    }
     
 
+    // writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
 
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
