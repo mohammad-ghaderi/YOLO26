@@ -8,6 +8,9 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "tools/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "tools/stb_image_write.h"
+
 
 typedef struct {
     float x1, y1, x2, y2;
@@ -41,9 +44,10 @@ void here() {
 void gemm_ic3s2(float *inp, float *weights, float *arr2, int SIZE);
 
 int main() {
-    // int width, height, channels;
-    // unsigned char *img = stbi_load("test/img.jpg", &width, &height, &channels, 3);
-    if (load_image() != 0) {
+    int width, height, channels;
+    unsigned char *img = stbi_load("test/img.jpg", &width, &height, &channels, 3);
+    
+    if (!img) {
         printf("Failed to load image!\n");
         return 1;
     }
@@ -536,9 +540,36 @@ int main() {
 
         printf("(%f %f %f %f) prob:%f class: %d\n", result[i].x1, result[i].y1, result[i].x2, result[i].y2, result[i].prob, result[i].class_idx);
     }
-    
 
-    // writeArrayToFile(arr1, OUT*OUT*OC, "out/out.txt", 0);
+    
+    // create the output image with bounding boxes
+    
+    char text[128];
+    for (int i = 0; i < count; i++) {
+
+        // draw_box(img, width, height, (int)result[i].x1, (int)result[i].y1, (int)result[i].x2, (int)result[i].y2, 3);
+
+        unsigned char r, g, b;
+        get_class_color(result[i].class_idx, &r, &g, &b);
+        draw_box(img, width, height, (int)result[i].x1, (int)result[i].y1, (int)result[i].x2, (int)result[i].y2, 3, r, g, b);
+        snprintf(text, sizeof(text), "%s %.2f%%", class_names[result[i].class_idx], result[i].prob * 100.0f);
+
+        int tx = (int)result[i].x1;
+        int ty = (int)result[i].y1 - 12;
+        int text_w = strlen(text) * 8;
+        int text_h = 10;
+        if (ty < 0)  ty = 0;
+
+        // colored label background
+        fill_rect(img, width, height, tx, ty, tx + text_w + 4, ty + text_h, r, g, b);
+
+        // white text
+        draw_text(img, width, height, tx + 2, ty + 1, text, 255, 255, 255);    
+    }
+
+    stbi_write_png("result.png", width, height, 3, img, width * 3);
+
+    stbi_image_free(img);
 
     // clock_t end = clock();
     // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;

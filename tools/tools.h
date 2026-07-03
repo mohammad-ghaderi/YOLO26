@@ -16,5 +16,9 @@ void transform_kernel_f23(float* kernel, int IC, int OC, float *U);
 void pointwise_conv_simple(float *inp, float *weights, float *output, int IC, int OC, int SIZE);
 void depthwise_conv_simple(float *inp, float *weights, float *output, int IC, int OC, int SIZE);
 
-
+void set_pixel(unsigned char *img, int w, int h, int x, int y, unsigned char r, unsigned char g, unsigned char b);
+void draw_box(unsigned char *img, int w, int h, int x1, int y1, int x2, int y2, int thickness, unsigned char r, unsigned char g, unsigned char b);
+void draw_text(unsigned char *img, int w, int h, int x, int y, const char *text, unsigned char r, unsigned char g, unsigned char b);
+void get_class_color(int class_id, unsigned char *r, unsigned char *g, unsigned char *b);
+void fill_rect(unsigned char *img, int w, int h, int x1, int y1, int x2, int y2, unsigned char r, unsigned char g, unsigned char b);
 #endif
