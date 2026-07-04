@@ -37,15 +37,16 @@ const float THRESHOLD = 0.25f;
 int SIZE = 640, IC = 3, OC = 16;
 int stride = 2;
 
-void here() {
-    return;
-}
+int main(int argc, char *argv[]) {
 
-void gemm_ic3s2(float *inp, float *weights, float *arr2, int SIZE);
+    if (argc < 2) {
+        printf("Usage: %s <image_path>\n", argv[0]);
+        return 1;
+    }
 
-int main() {
+    const char *image_path = argv[1];
     int width, height, channels;
-    unsigned char *img = stbi_load("test/img.jpg", &width, &height, &channels, 3);
+    unsigned char *img = stbi_load(image_path, &width, &height, &channels, 3);
     
     if (!img) {
         printf("Failed to load image!\n");
@@ -56,7 +57,7 @@ int main() {
         return 1;
     }
 
-    // clock_t start = clock();
+    clock_t start = clock();
 
     float *weights = params;
     
@@ -514,6 +515,11 @@ int main() {
     point_wise_bias_ic16oc4(arr3, weights, weights+OC*IC, arr4+(80*80+40*40)*4, SIZE, 4*4);
     weights += OC*IC+OC;
 
+
+    clock_t end = clock();
+    double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
+    printf("Model:%.6f ms.\n------------\n", time_spent);
+
     Detect result[300];
 
     int rel_i, base, mult;
@@ -570,10 +576,6 @@ int main() {
     stbi_write_png("result.png", width, height, 3, img, width * 3);
 
     stbi_image_free(img);
-
-    // clock_t end = clock();
-    // double time_spent = (double)(end - start) / CLOCKS_PER_SEC;
-    // printf("%.6f #\n", time_spent);
 
     return 0;
 }

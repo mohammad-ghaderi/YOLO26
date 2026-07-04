@@ -16,6 +16,7 @@ void gemm8x8_v4(float *input, float *w, float *output, int output_stride, int IC
 void gemm8x8_v5(float *input, float *w, float *output, int output_stride, int IC, int layer_stride, int kernel_stride);
 void gemm8x8_v10(float *input, float *w, float *output, int output_stride, int IC, int layer_stride, int kernel_stride);
 void gemm4x8x2_v6(float *input, float *w, float *output, int output_stride, int IC, int layer_stride, float *kernel_stride);
+void gemm_ic3s2(float *inp, float *weights, float *arr2, int SIZE);
 
 void conv3x3oc32_v1(float *input, float *w, float *ouptput, int IC, int SIZE, int OC);
 void conv3x3oc32fp16_v1(float *input, float *w, float *ouptput, int IC, int SIZE, int OC);

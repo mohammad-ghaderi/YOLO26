@@ -24,13 +24,15 @@ SRC := main.c  tools/tools.c buffer.s  padding.s indirection.s \
 
 TARGET := conv
 
+IMG ?= test/img.jpg
+
 all: $(TARGET)
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 run: $(TARGET)
-	$(RUN) ./$(TARGET)
+	$(RUN) ./$(TARGET) $(IMG)
 
 clean:
 	rm -f $(TARGET)
