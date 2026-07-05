@@ -82,13 +82,22 @@ All benchmarks were performed on:
 </p>
 
 
+
 ## Build & Run
 
 Compile the project : <sup>( same for arm or x86 on QEMU emulator)</sup>
-<small>
-If ARM64 hardware is not available, the project can be executed through QEMU. The provided Makefile supports both native ARM64 execution and QEMU-based execution using the same commands. [Go To Install QEMU emulator](#install-qemu-emulator)
+
+<small> If ARM64 hardware is not available, the project can be executed through QEMU. The provided Makefile supports both native ARM64 execution and QEMU-based execution using the same commands. [Go To Install QEMU emulator](#install-qemu-emulator)
 </small>
 
+
+First, clone the repository:
+
+```bash id="k9l0m1"
+git clone https://github.com/mohammad-ghaderi/YOLO26.git
+cd YOLO26
+```
+Build
 ```
 make
 ```
