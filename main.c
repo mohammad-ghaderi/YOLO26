@@ -528,6 +528,7 @@ int main(int argc, char *argv[]) {
         if (index < 80*80) {
             base = 80;
             mult = 8;
+            rel_i = index;
         } else if (index < 80*80+40*40) {
             rel_i = index - 80*80;
             base = 40;
@@ -544,7 +545,7 @@ int main(int argc, char *argv[]) {
         result[i].x2 = (((rel_i%base)+0.5) + arr4[index*4+2])*mult;
         result[i].y2 = (((rel_i/base)+0.5) + arr4[index*4+3])*mult;
 
-        printf("(%f %f %f %f) prob:%f class: %d\n", result[i].x1, result[i].y1, result[i].x2, result[i].y2, result[i].prob, result[i].class_idx);
+        printf("class: %2d, prob:%.6f, (%.1f %.1f %.1f %.1f)\n", result[i].class_idx, result[i].prob, result[i].x1, result[i].y1, result[i].x2, result[i].y2);
     }
 
     
@@ -558,7 +559,7 @@ int main(int argc, char *argv[]) {
         unsigned char r, g, b;
         get_class_color(result[i].class_idx, &r, &g, &b);
         draw_box(img, width, height, (int)result[i].x1, (int)result[i].y1, (int)result[i].x2, (int)result[i].y2, 3, r, g, b);
-        snprintf(text, sizeof(text), "%s %.2f%%", class_names[result[i].class_idx], result[i].prob * 100.0f);
+        snprintf(text, sizeof(text), "%s %.1f%%", class_names[result[i].class_idx], result[i].prob * 100.0f);
 
         int tx = (int)result[i].x1;
         int ty = (int)result[i].y1 - 12;
