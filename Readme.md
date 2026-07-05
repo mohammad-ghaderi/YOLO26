@@ -1,8 +1,8 @@
 ## YOLO26 Inference (ARM64 Assembly + C)
 
 <p align="center">
-  <img src="docs/result2.png" width="49%" alt="YOLO26 Detection Result" width="800">
   <img src="docs/result1.png" width="49%" alt="YOLO26 Detection Result" width="800">
+  <img src="docs/result4.png" width="49%" alt="YOLO26 Detection Result" width="800">
 </p>
 
 <p align="center">
@@ -72,11 +72,22 @@ All benchmarks were performed on:
   <img src="docs/benchmark.png" alt="Performance Comparison" width="700">
 </p>
 
+## Example
+<p align="center">
+  <img src="docs/result2.png" width="24%" alt="YOLO26 Detection Result" width="800">
+  <img src="docs/result1.png" width="24%" alt="YOLO26 Detection Result" width="800">
+  <img src="docs/result3.png" width="24%" alt="YOLO26 Detection Result" width="800">
+  <img src="docs/result4.png" width="24%" alt="YOLO26 Detection Result" width="800">
+<sub>This is the output of the implementation. It surprised me—you can test it too.
+</p>
+
 
 ## Build & Run
 
 Compile the project : <sup>( same for arm or x86 on QEMU emulator)</sup>
-<small>If ARM64 hardware is not available, the project can be executed through QEMU. The provided Makefile supports both native ARM64 execution and QEMU-based execution using the same commands. [Go To Install QEMU emulator](#install-qemu-emulator)
+<small>
+If ARM64 hardware is not available, the project can be executed through QEMU. The provided Makefile supports both native ARM64 execution and QEMU-based execution using the same commands. [Go To Install QEMU emulator](#install-qemu-emulator)
+</small>
 
 ```
 make
