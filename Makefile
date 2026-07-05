@@ -9,7 +9,7 @@ else
 endif
 
 # Build flags
-CFLAGS := -O0 \
+CFLAGS := -O3 \
           -march=armv8-a+simd+fp16 \
           -ftree-vectorize \
           -fopenmp \
@@ -24,7 +24,7 @@ SRC := main.c  tools/tools.c buffer.s  padding.s indirection.s \
 
 TARGET := conv
 
-IMG ?= test/img.jpg
+IMG ?= input.jpg
 
 all: $(TARGET)
 
