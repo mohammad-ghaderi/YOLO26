@@ -102,7 +102,7 @@ Build
 make
 ```
 
-Run inference on an image:
+Run inference on an image: <sub>input image should be 640*640 jpg
 ```
 make run IMG=path/to/image.jpg
 ```
